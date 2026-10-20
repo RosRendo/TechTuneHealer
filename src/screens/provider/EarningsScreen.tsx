@@ -51,6 +51,40 @@ export default function EarningsScreen() {
     return [...withdrawals, ...bookingTx];
   }, [bookings, withdrawals]);
 
+  // Weekly revenue chart (Mon–Sun) from real/seed bookings
+  const weeklyRevenue = useMemo(() => {
+    const buckets = [
+      { label: "Mon", value: 0 },
+      { label: "Tue", value: 0 },
+      { label: "Wed", value: 0 },
+      { label: "Thu", value: 0 },
+      { label: "Fri", value: 0 },
+      { label: "Sat", value: 0 },
+      { label: "Sun", value: 0 },
+    ];
+    const now = new Date();
+    bookings.forEach((b) => {
+      const d = new Date(b.scheduledDate);
+      if (isNaN(d.getTime())) return;
+      const daysAgo = Math.floor((now.getTime() - d.getTime()) / 86400000);
+      if (daysAgo < 0 || daysAgo > 6) return;
+      const jsDay = d.getDay(); // 0=Sun
+      const labelIdx = jsDay === 0 ? 6 : jsDay - 1;
+      buckets[labelIdx].value += Number(b.finalPrice || b.estimatedPrice || (b as any).totalPrice || 45);
+    });
+    const hasData = buckets.some((b) => b.value > 0);
+    if (!hasData) {
+      // Demo fallback so the chart is never an empty void
+      return buckets.map((b, i) => ({ ...b, value: [180, 240, 160, 300, 420, 210, 150][i] }));
+    }
+    return buckets;
+  }, [bookings]);
+
+  const weeklyTotal = weeklyRevenue.reduce((s, b) => s + b.value, 0);
+  const weeklyMax = Math.max(...weeklyRevenue.map((b) => b.value), 1);
+  // Simple Monday-first week labels for the chart
+  const todayLabelIdx = (new Date().getDay() + 6) % 7;
+
   // Compute live financial totals from database seed bookings
   const financialData = useMemo(() => {
     const completedJobs = bookings.filter((b) => b.status === "completed" || b.status === "in_progress");
@@ -126,7 +160,7 @@ export default function EarningsScreen() {
       <AnimatedEntrance delay={0} direction="down">
         <View style={styles.header}>
           <View>
-            <Text style={styles.headerTitle}>Financial Analytics</Text>
+            <Text style={styles.headerTitle}>Earnings & Payouts</Text>
             <Text style={styles.headerSubtitle}>Revenue, Platform Fees & Settlements</Text>
           </View>
           <TouchableOpacity
@@ -202,35 +236,73 @@ export default function EarningsScreen() {
           </View>
         </AnimatedEntrance>
 
-        {/* Net Withdrawable Balance Banner */}
+        {/* Net Withdrawable Balance Banner — Batch 5 royal blue card */}
         <AnimatedEntrance delay={140} direction="up">
           <View style={styles.balanceHeroCard}>
             <View style={styles.balanceHeader}>
               <View>
-                <Text style={styles.balanceHeroLabel}>Net Available Withdrawable Balance</Text>
+                <Text style={styles.balanceHeroLabel}>Available Payout Balance</Text>
                 <Text style={styles.balanceHeroValue}>${currentData.available.toFixed(2)}</Text>
               </View>
               <View style={styles.khqrVerifiedBadge}>
-                <Text style={styles.khqrVerifiedText}>🇰🇭 ABA KHQR</Text>
+                <Text style={styles.khqrVerifiedText}>🇰🇭 Bakong Enabled</Text>
               </View>
             </View>
+
+            <View style={styles.bankRow}>
+              <Ionicons name="business-outline" size={14} color={colors.white} />
+              <Text style={styles.bankRowText}>
+                ABA Bank (Account: *** 8921) • Bakong Enabled
+              </Text>
+            </View>
+
+            <TouchableOpacity style={styles.withdrawCardButton} onPress={() => setWithdrawModalVisible(true)}>
+              <Ionicons name="flash" size={14} color={colors.primary[700]} />
+              <Text style={styles.withdrawCardButtonText}>Withdraw Funds to ABA Bank</Text>
+            </TouchableOpacity>
 
             <View style={styles.balanceFooterRow}>
               <View style={styles.clearingInfo}>
-                <Ionicons name="time-outline" size={14} color={colors.neutral[300]} />
+                <Ionicons name="time-outline" size={13} color={colors.white} />
                 <Text style={styles.clearingText}>
-                  +${currentData.pending.toFixed(2)} pending 24h bank settlement
+                  +${currentData.pending.toFixed(2)} pending 24h settlement
                 </Text>
               </View>
-
-              <TouchableOpacity
-                style={styles.withdrawCardButton}
-                onPress={() => setWithdrawModalVisible(true)}
-              >
-                <Ionicons name="flash" size={14} color={colors.primary[700]} />
-                <Text style={styles.withdrawCardButtonText}>Instant Transfer</Text>
-              </TouchableOpacity>
             </View>
+          </View>
+
+          {/* Weekly Revenue Chart Card — Batch 5 Screen 20 */}
+          <View style={styles.weeklyChartCard}>
+            <Text style={styles.weeklyChartTitle}>Weekly Revenue</Text>
+            <View style={styles.weeklyBarsRow}>
+              {weeklyRevenue.map((day, idx) => (
+                <View key={day.label} style={styles.weeklyBarColumn}>
+                  <View style={styles.weeklyBarTrack}>
+                    <View
+                      style={[
+                        styles.weeklyBarFill,
+                        {
+                          height: `${Math.max(6, (day.value / weeklyMax) * 100)}%`,
+                          backgroundColor:
+                            idx === todayLabelIdx ? colors.primary[700] : colors.primary[200],
+                        },
+                      ]}
+                    />
+                  </View>
+                  <Text
+                    style={[
+                      styles.weeklyBarLabel,
+                      idx === todayLabelIdx && styles.weeklyBarLabelToday,
+                    ]}
+                  >
+                    {day.label}
+                  </Text>
+                </View>
+              ))}
+            </View>
+            <Text style={styles.weeklyChartTotal}>
+              Total: ${weeklyTotal.toFixed(2)} ({transactions.length} jobs completed)
+            </Text>
           </View>
         </AnimatedEntrance>
 
@@ -529,21 +601,21 @@ const styles = StyleSheet.create({
     color: colors.neutral[400],
   },
   balanceHeroCard: {
-    backgroundColor: "#0F172A",
+    backgroundColor: colors.primary[700],
     borderRadius: borderRadius.xl,
     padding: spacing.lg,
     marginBottom: spacing.md,
+    gap: spacing.md,
     ...shadows.md,
   },
   balanceHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-start",
-    marginBottom: spacing.md,
   },
   balanceHeroLabel: {
     fontSize: 12,
-    color: colors.neutral[400],
+    color: "rgba(255, 255, 255, 0.7)",
     fontWeight: "500",
     marginBottom: 4,
   },
@@ -554,7 +626,7 @@ const styles = StyleSheet.create({
     letterSpacing: -0.5,
   },
   khqrVerifiedBadge: {
-    backgroundColor: "rgba(255, 255, 255, 0.12)",
+    backgroundColor: "rgba(255, 255, 255, 0.16)",
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: borderRadius.full,
@@ -562,39 +634,97 @@ const styles = StyleSheet.create({
   khqrVerifiedText: {
     fontSize: 11,
     fontWeight: "700",
-    color: "#38BDF8",
+    color: colors.white,
+  },
+  bankRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  bankRowText: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: colors.white,
+  },
+  withdrawCardButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: colors.white,
+    paddingVertical: 10,
+    borderRadius: borderRadius.md,
+    gap: 4,
+  },
+  withdrawCardButtonText: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: colors.primary[700],
   },
   balanceFooterRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingTop: spacing.sm,
-    borderTopWidth: 1,
-    borderTopColor: "rgba(255, 255, 255, 0.12)",
+    alignItems: "flex-start",
   },
   clearingInfo: {
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
-    flex: 1,
   },
   clearingText: {
     fontSize: 10,
-    color: colors.neutral[300],
+    color: "rgba(255, 255, 255, 0.7)",
   },
-  withdrawCardButton: {
-    flexDirection: "row",
-    alignItems: "center",
+  weeklyChartCard: {
     backgroundColor: colors.white,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: borderRadius.md,
-    gap: 4,
+    borderRadius: borderRadius.xl,
+    padding: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.neutral[200],
+    marginBottom: spacing.md,
+    ...shadows.sm,
   },
-  withdrawCardButtonText: {
-    fontSize: 11,
+  weeklyChartTitle: {
+    fontSize: 14,
     fontWeight: "700",
     color: colors.neutral[900],
+    marginBottom: spacing.sm,
+  },
+  weeklyBarsRow: {
+    flexDirection: "row",
+    gap: 8,
+    height: 110,
+  },
+  weeklyBarColumn: {
+    flex: 1,
+    alignItems: "center",
+  },
+  weeklyBarTrack: {
+    flex: 1,
+    width: "70%",
+    flexDirection: "column",
+    justifyContent: "flex-end",
+    backgroundColor: colors.neutral[100],
+    borderRadius: 8,
+    overflow: "hidden",
+  },
+  weeklyBarFill: {
+    width: "100%",
+    borderTopLeftRadius: 8,
+    borderTopRightRadius: 8,
+  },
+  weeklyBarLabel: {
+    fontSize: 10,
+    fontWeight: "600",
+    color: colors.neutral[500],
+    marginTop: spacing.xs,
+  },
+  weeklyBarLabelToday: {
+    color: colors.primary[700],
+    fontWeight: "800",
+  },
+  weeklyChartTotal: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: colors.neutral[700],
+    marginTop: spacing.sm,
   },
   breakdownCard: {
     backgroundColor: colors.white,

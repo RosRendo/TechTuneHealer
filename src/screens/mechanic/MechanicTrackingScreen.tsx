@@ -8,8 +8,7 @@ import {
   AppState,
   Platform,
   Linking,
-  PanResponder,
-  Animated,
+  TextInput,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRoute, useNavigation } from '@react-navigation/native';
@@ -31,193 +30,26 @@ if (Platform.OS !== 'web') {
   } catch {}
 }
 
+import { SlideToConfirm } from '../../components/SlideToConfirm';
 import { colors, spacing, fontSize, fontWeight, borderRadius, shadows } from '../../constants/theme';
 import { AnimatedEntrance } from '../../components';
 import { useBookingStore, useAuthStore, useLocationStore } from '../../store';
 import api from '../../services/api';
 import { WS_URL } from '../../config/api';
 
-// ── Interactive Drag to Confirm / Slide to Action Component ──────────────
-interface SlideToConfirmProps {
-  label: string;
-  icon: keyof typeof Ionicons.glyphMap;
-  color: string;
-  onConfirm: () => void;
-  resetKey?: string | number;
-}
-
-const SlideToConfirm: React.FC<SlideToConfirmProps> = ({
-  label,
-  icon,
-  color,
-  onConfirm,
-  resetKey,
-}) => {
-  const [trackWidth, setTrackWidth] = useState(0);
-  const maxDragRef = useRef(0);
-  const pan = useRef(new Animated.Value(0)).current;
-  const knobScale = useRef(new Animated.Value(1)).current;
-  const shimmer = useRef(new Animated.Value(0)).current;
-  const KNOB_SIZE = 48;
-  const TRACK_PADDING = 4;
-
-  // Reset knob on stage change
-  useEffect(() => {
-    pan.setValue(0);
-  }, [resetKey]);
-
-  // Continuous Shimmer Chevron Wave Animation
-  useEffect(() => {
-    const loop = Animated.loop(
-      Animated.sequence([
-        Animated.timing(shimmer, {
-          toValue: 1,
-          duration: 1400,
-          useNativeDriver: false,
-        }),
-        Animated.timing(shimmer, {
-          toValue: 0,
-          duration: 200,
-          useNativeDriver: false,
-        }),
-      ])
-    );
-    loop.start();
-    return () => loop.stop();
-  }, [shimmer]);
-
-  const updateMaxDrag = (width: number) => {
-    const max = Math.max(0, width - KNOB_SIZE - TRACK_PADDING * 2);
-    setTrackWidth(width);
-    maxDragRef.current = max;
-  };
-
-  const triggerSlideSuccess = useCallback(() => {
-    const max = maxDragRef.current;
-    Animated.timing(pan, {
-      toValue: max,
-      duration: 150,
-      useNativeDriver: false,
-    }).start(() => {
-      onConfirm();
-      setTimeout(() => {
-        Animated.timing(pan, {
-          toValue: 0,
-          duration: 250,
-          useNativeDriver: false,
-        }).start();
-      }, 350);
-    });
-  }, [onConfirm]);
-
-  const panResponder = useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
-      onMoveShouldSetPanResponder: () => true,
-      onPanResponderGrant: () => {
-        Animated.spring(knobScale, {
-          toValue: 1.1,
-          friction: 5,
-          tension: 60,
-          useNativeDriver: false,
-        }).start();
-      },
-      onPanResponderMove: (_, gestureState) => {
-        if (gestureState.dx > 0) {
-          const clamped = Math.min(gestureState.dx, maxDragRef.current);
-          pan.setValue(clamped);
-        }
-      },
-      onPanResponderRelease: (_, gestureState) => {
-        Animated.spring(knobScale, {
-          toValue: 1,
-          friction: 5,
-          tension: 60,
-          useNativeDriver: false,
-        }).start();
-
-        const threshold = maxDragRef.current * 0.6;
-        if (gestureState.dx > threshold) {
-          triggerSlideSuccess();
-        } else {
-          // Spring back smoothly with native bounce physics
-          Animated.spring(pan, {
-            toValue: 0,
-            friction: 5,
-            tension: 45,
-            useNativeDriver: false,
-          }).start();
-        }
-      },
-    })
-  ).current;
-
-  // Text label opacity fades out as knob slides across
-  const textOpacity = maxDragRef.current > 0
-    ? pan.interpolate({
-        inputRange: [0, maxDragRef.current * 0.45],
-        outputRange: [1, 0],
-        extrapolate: 'clamp',
-      })
-    : 1;
-
-  // Dynamic progress track fill width
-  const fillWidth = pan.interpolate({
-    inputRange: [0, Math.max(1, maxDragRef.current)],
-    outputRange: [KNOB_SIZE + TRACK_PADDING * 2, trackWidth || 100],
-    extrapolate: 'clamp',
-  });
-
-  // Animated shimmer offset for arrows
-  const chevronTranslate = shimmer.interpolate({
-    inputRange: [0, 0.5, 1],
-    outputRange: [0, 6, 0],
-  });
-
-  return (
-    <View
-      style={[styles.sliderTrack, { borderColor: `${color}35` }]}
-      onLayout={(e) => updateMaxDrag(e.nativeEvent.layout.width)}
-    >
-      {/* Animated progress track fill */}
-      <Animated.View
-        style={[
-          styles.sliderFill,
-          {
-            width: fillWidth,
-            backgroundColor: `${color}25`,
-          },
-        ]}
-      />
-
-      {/* Track Label with dynamic animated chevrons */}
-      <Animated.View style={[styles.sliderLabelWrapper, { opacity: textOpacity }]} pointerEvents="none">
-        <Text style={[styles.sliderLabelText, { color }]}>{label}</Text>
-        <Animated.View style={[styles.chevronsRow, { transform: [{ translateX: chevronTranslate }] }]}>
-          <Ionicons name="chevron-forward" size={13} color={color} style={{ opacity: 0.35 }} />
-          <Ionicons name="chevron-forward" size={13} color={color} style={{ marginLeft: -8, opacity: 0.65 }} />
-          <Ionicons name="chevron-forward" size={13} color={color} style={{ marginLeft: -8, opacity: 1.0 }} />
-        </Animated.View>
-      </Animated.View>
-
-      {/* Draggable Knob with scale and translation */}
-      <Animated.View
-        style={[
-          styles.sliderKnob,
-          {
-            backgroundColor: color,
-            transform: [
-              { translateX: pan },
-              { scale: knobScale },
-            ],
-          },
-        ]}
-        {...panResponder.panHandlers}
-      >
-        <Ionicons name={icon} size={22} color={colors.white} />
-      </Animated.View>
-    </View>
-  );
+const haversineKm = (
+  a: { lat: number; lng: number },
+  b: { lat: number; lng: number }
+) => {
+  const R = 6371;
+  const dLat = ((b.lat - a.lat) * Math.PI) / 180;
+  const dLng = ((b.lng - a.lng) * Math.PI) / 180;
+  const lat1 = (a.lat * Math.PI) / 180;
+  const lat2 = (b.lat * Math.PI) / 180;
+  const h =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(h));
 };
 
 export function MechanicTrackingScreen() {
@@ -306,6 +138,8 @@ export function MechanicTrackingScreen() {
 
   const [isTracking, setIsTracking] = useState(false);
   const [status, setStatus] = useState<'idle' | 'tracking' | 'arrived' | 'in_progress' | 'completed'>('idle');
+  const [pinInput, setPinInput] = useState('');
+  const [pinVerified, setPinVerified] = useState(false);
   // Initialize coords from live position if available, or fallback to default provider pos until GPS loads
   const [coords, setCoords] = useState<{ lat: number; lng: number }>(initialLivePos || defaultProviderPos);
   const [customerCoords, setCustomerCoords] = useState<{ lat: number; lng: number }>(getDestinationCoords(currentBooking));
@@ -336,7 +170,7 @@ export function MechanicTrackingScreen() {
     };
   }, [coords, initialLivePos, defaultProviderPos, currentBooking, getDestinationCoords]);
 
-  // ── Auto-fit map viewport to frame both specialist and customer ────────
+  // â”€â”€ Auto-fit map viewport to frame both specialist and customer â”€â”€â”€â”€â”€â”€â”€â”€
   const fitMapBounds = useCallback(() => {
     if (!mapRef.current) return;
     const currentLoc = coords || defaultProviderPos;
@@ -355,7 +189,7 @@ export function MechanicTrackingScreen() {
     });
   }, [coords, defaultProviderPos, currentBooking, getDestinationCoords, routeCoords]);
 
-  // ── Connect socket on mount ──────────────────────────────────────────────
+  // â”€â”€ Connect socket on mount â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   useEffect(() => {
     let active = true;
 
@@ -366,7 +200,7 @@ export function MechanicTrackingScreen() {
       const socket = io(WS_URL, { auth: { token } });
       socketRef.current = socket;
 
-      socket.on('connect', () => console.log('🔌 Socket connected'));
+      socket.on('connect', () => console.log('ðŸ”Œ Socket connected'));
       socket.on('connect_error', (err) => console.warn('Socket connection failed:', err.message));
     })();
 
@@ -377,21 +211,21 @@ export function MechanicTrackingScreen() {
     };
   }, []);
 
-  // ── Handle app background / foreground ──────────────────────────────────
+  // â”€â”€ Handle app background / foreground â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   useEffect(() => {
     const sub = AppState.addEventListener('change', nextState => {
       if (
         appStateRef.current.match(/inactive|background/) &&
         nextState === 'active'
       ) {
-        // App came to foreground – tracking continues silently
+        // App came to foreground â€“ tracking continues silently
       }
       appStateRef.current = nextState;
     });
     return () => sub.remove();
   }, []);
 
-  // ── Sync destination and route when currentBooking loads or changes ──────
+  // â”€â”€ Sync destination and route when currentBooking loads or changes â”€â”€â”€â”€â”€â”€
   useEffect(() => {
     const dest = getDestinationCoords(currentBooking);
     customerCoordsRef.current = dest;
@@ -446,7 +280,7 @@ export function MechanicTrackingScreen() {
   }, [currentBooking, getDestinationCoords, defaultProviderPos, initialLivePos, setStoreLocation]);
 
 
-  // ── Fetch OSRM Route with HTTPS & Reliable Waypoint Fallback ──────────────
+  // â”€â”€ Fetch OSRM Route with HTTPS & Reliable Waypoint Fallback â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const fetchRoute = async (start: { lat: number; lng: number }, end: { lat: number; lng: number }) => {
     try {
       const response = await fetch(
@@ -479,7 +313,7 @@ export function MechanicTrackingScreen() {
     setTimeout(fitMapBounds, 400);
   };
 
-  // ── Start tracking (Real GPS & Simulation) ────────────────────────────────
+  // â”€â”€ Start tracking (Real GPS & Simulation) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const startTracking = useCallback(async () => {
     setIsTracking(true);
     setStatus('tracking');
@@ -570,7 +404,7 @@ export function MechanicTrackingScreen() {
     } as any;
   }, [bookingId, coords, liveGpsCoords, initialLivePos, defaultProviderPos, currentBooking, getDestinationCoords, updateBookingStatus]);
 
-  // ── Stop tracking ────────────────────────────────────────────────────────
+  // â”€â”€ Stop tracking â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const stopTracking = useCallback(() => {
     locationSubRef.current?.remove();
     locationSubRef.current = null;
@@ -586,20 +420,20 @@ export function MechanicTrackingScreen() {
     }
   }, [currentBooking?.status, status, startTracking]);
 
-  // ── Signal arrival ───────────────────────────────────────────────────────
+  // â”€â”€ Signal arrival â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const signalArrival = useCallback(() => {
     socketRef.current?.emit('mechanic:arrived', { bookingId });
     stopTracking();
     setStatus('arrived');
-    Alert.alert('Arrival Confirmed! 🚗', 'The customer has been alerted that you have reached the breakdown vehicle.');
+    Alert.alert('Arrival Confirmed! ðŸš—', 'The customer has been alerted that you have reached the breakdown vehicle.');
   }, [bookingId, stopTracking]);
 
-  // ── Complete Job & Invoice ───────────────────────────────────────────────
+  // â”€â”€ Complete Job & Invoice â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const handleCompleteJob = useCallback(() => {
     const totalAmount = currentBooking?.estimatedPrice || currentBooking?.totalPrice || 45;
     Alert.alert(
       'Complete Service & Issue Invoice',
-      `Summary:\n• Service: ${currentBooking?.serviceType || 'Emergency Roadside Assistance'}\n• Emergency Callout Fee: $25.00\n• Diagnostics & Labor: $${Math.max(0, totalAmount - 25).toFixed(2)}\n• Total Amount: $${Number(totalAmount).toFixed(2)}\n\nConfirm job completion and issue customer invoice?`,
+      `Summary:\nâ€¢ Service: ${currentBooking?.serviceType || 'Emergency Roadside Assistance'}\nâ€¢ Emergency Callout Fee: $25.00\nâ€¢ Diagnostics & Labor: $${Math.max(0, totalAmount - 25).toFixed(2)}\nâ€¢ Total Amount: $${Number(totalAmount).toFixed(2)}\n\nConfirm job completion and issue customer invoice?`,
       [
         { text: 'Cancel', style: 'cancel' },
         {
@@ -609,14 +443,32 @@ export function MechanicTrackingScreen() {
               await updateBookingStatus(bookingId, 'completed');
             }
             setStatus('completed');
-            Alert.alert('Job Completed! 🎉', 'Customer invoice generated and payout recorded in your earnings.');
+            Alert.alert('Job Completed! ðŸŽ‰', 'Customer invoice generated and payout recorded in your earnings.');
           },
         },
       ]
     );
-  }, [bookingId, currentBooking, updateBookingStatus]);
+   }, [bookingId, currentBooking, updateBookingStatus]);
 
-  // ── Status styles ────────────────────────────────────────────────────────
+  // ── Live route telemetry (distance + ETA at ~25 km/h city driving) ───────
+  const remainingKm = haversineKm(coords || defaultProviderPos, customerCoords);
+  const remainingM = Math.round(remainingKm * 1000);
+  const etaMinutes = Math.max(1, Math.round(remainingKm / 0.42));
+  const isNavActive = isTracking || status === 'tracking';
+  const securityPin =
+    (currentBooking as any)?.securityPin ||
+    (bookingId ? bookingId.replace(/\D/g, '').slice(-4).padStart(4, '0') : '4821');
+
+  const handlePinSubmit = (value: string) => {
+    const digits = value.replace(/\D/g, '').slice(0, 4);
+    setPinInput(digits);
+    if (digits.length === 4 && digits === securityPin) {
+      setPinVerified(true);
+    }
+  };
+
+
+  // â”€â”€ Status styles â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const statusMeta = {
     idle:        { icon: 'location-outline', color: colors.neutral[500], label: 'Ready for Dispatch' },
     tracking:    { icon: 'navigate',         color: colors.success[600], label: 'En Route to Motorist' },
@@ -646,7 +498,7 @@ export function MechanicTrackingScreen() {
                 <View style={styles.webGpsHeader}>
                   <View style={styles.webPulseDot} />
                   <Text style={styles.webGpsHeaderText}>
-                    LIVE TELEMETRY RADAR • PHNOM PENH
+                    LIVE TELEMETRY RADAR â€¢ PHNOM PENH
                   </Text>
                 </View>
 
@@ -771,7 +623,7 @@ export function MechanicTrackingScreen() {
                 {currentBooking?.customer?.name || currentBooking?.customerName || "Stranded Motorist"}
               </Text>
               <Text style={styles.serviceSubText} numberOfLines={1}>
-                #{bookingId?.slice(-6).toUpperCase() || 'BK-8902'} • {currentBooking?.serviceType || "Emergency Roadside Assistance"}
+                #{bookingId?.slice(-6).toUpperCase() || 'BK-8902'} â€¢ {currentBooking?.serviceType || "Emergency Roadside Assistance"}
               </Text>
             </View>
             <View style={styles.etaBadge}>
@@ -790,7 +642,7 @@ export function MechanicTrackingScreen() {
               </Text>
             </View>
             <View style={styles.cambodianPlateBadge}>
-              <Text style={styles.cambodianPlateFlag}>🇰🇭</Text>
+              <Text style={styles.cambodianPlateFlag}>ðŸ‡°ðŸ‡­</Text>
               <Text style={styles.cambodianPlateText}>
                 {currentBooking?.vehicle?.plateNumber || "Phnom Penh 2B-8899"}
               </Text>
@@ -808,6 +660,29 @@ export function MechanicTrackingScreen() {
           )}
 
         </View>
+
+        {/* Floating Turn-by-Turn Navigation HUD (Uber Driver style) */}
+        {isNavActive && status !== 'completed' && (
+          <View style={styles.navBanner}>
+            <View style={styles.navBannerDirection}>
+              <Ionicons name="arrow-up" size={20} color={colors.white} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.navBannerTitle} numberOfLines={1}>
+                {remainingM >= 1000
+                  ? `Continue ${(remainingM / 1000).toFixed(1)} km along the route`
+                  : `In ${remainingM} m — follow the highlighted route`}
+              </Text>
+              <Text style={styles.navBannerSub} numberOfLines={1}>
+                Live GPS guidance • head toward breakdown pin
+              </Text>
+            </View>
+            <View style={styles.navBannerEta}>
+              <Text style={styles.navBannerEtaTime}>~{etaMinutes} min</Text>
+              <Text style={styles.navBannerEtaSub}>ETA</Text>
+            </View>
+          </View>
+        )}
 
         {/* Overlay Card */}
         <View style={styles.overlayCard}>
@@ -945,14 +820,50 @@ export function MechanicTrackingScreen() {
             </View>
           )}
 
-          {/* STAGE 3: Arrived (At Vehicle) */}
+          {/* STAGE 3: Arrived (At Vehicle) — requires customer 4-digit PIN */}
           {status === 'arrived' && (
             <View style={styles.stageButtonGroup}>
+              <View style={styles.pinBox}>
+                <View style={styles.pinBoxHeader}>
+                  <Ionicons name="keypad-outline" size={16} color={colors.neutral[700]} />
+                  <Text style={styles.pinBoxLabel}>Enter Customer&apos;s 4-Digit Verification PIN</Text>
+                  {pinVerified && (
+                    <View style={styles.pinVerifiedBadge}>
+                      <Ionicons name="checkmark-circle" size={14} color={colors.white} />
+                      <Text style={styles.pinVerifiedText}>Verified</Text>
+                    </View>
+                  )}
+                </View>
+                <View style={styles.pinInputRow}>
+                  <TextInput
+                    style={styles.pinInput}
+                    value={pinInput}
+                    onChangeText={handlePinSubmit}
+                    keyboardType="number-pad"
+                    maxLength={4}
+                    placeholder="- - - -"
+                    placeholderTextColor={colors.neutral[400]}
+                  />
+                  {!pinVerified && (
+                    <Text style={styles.pinHintText}>Ask the customer to share the PIN shown on their screen</Text>
+                  )}
+                  {pinVerified && (
+                    <Text style={styles.pinVerifiedHintText}>Customer identity confirmed</Text>
+                  )}
+                </View>
+              </View>
               <SlideToConfirm
                 label="Slide to Start Repair"
                 icon="construct"
                 color={colors.primary[600]}
                 onConfirm={() => {
+                  if (!pinVerified) {
+                    Alert.alert(
+                      'Verification required',
+                      "Enter the customer's 4-digit PIN before starting the repair."
+                    );
+                    return;
+                  }
                   setStatus('in_progress');
                   if (bookingId) updateBookingStatus(bookingId, 'in_progress');
                 }}
@@ -1303,51 +1214,6 @@ const styles = StyleSheet.create({
     gap: spacing.md,
     backgroundColor: colors.white,
   },
-  sliderTrack: {
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: colors.neutral[100],
-    borderWidth: 1.5,
-    justifyContent: 'center',
-    paddingHorizontal: 4,
-    overflow: 'hidden',
-    position: 'relative',
-    ...shadows.sm,
-  },
-  sliderFill: {
-    position: 'absolute',
-    left: 0,
-    top: 0,
-    bottom: 0,
-    borderRadius: 28,
-  },
-  sliderLabelWrapper: {
-    position: 'absolute',
-    left: 56,
-    right: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 2,
-  },
-  sliderLabelText: {
-    fontSize: 13,
-    fontWeight: fontWeight.bold,
-    letterSpacing: 0.3,
-  },
-  chevronsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginLeft: 2,
-  },
-  sliderKnob: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    justifyContent: 'center',
-    alignItems: 'center',
-    ...shadows.md,
-  },
   stepperContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1446,6 +1312,115 @@ const styles = StyleSheet.create({
     fontWeight: fontWeight.semibold,
     color: colors.warning[700],
   },
+  navBanner: {
+    position: 'absolute',
+    top: spacing.md + 128,
+    left: spacing.md,
+    right: spacing.md,
+    backgroundColor: colors.neutral[900],
+    borderRadius: borderRadius.lg,
+    padding: spacing.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.10)',
+    ...shadows.md,
+  },
+  navBannerDirection: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: colors.primary[600],
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  navBannerTitle: {
+    fontSize: fontSize.sm,
+    fontWeight: fontWeight.bold,
+    color: colors.white,
+  },
+  navBannerSub: {
+    fontSize: fontSize.xs,
+    color: colors.neutral[400],
+    marginTop: 1,
+  },
+  navBannerEta: {
+    alignItems: 'flex-end',
+  },
+  navBannerEtaTime: {
+    fontSize: fontSize.base,
+    fontWeight: fontWeight.bold,
+    color: colors.white,
+  },
+  navBannerEtaSub: {
+    fontSize: fontSize.xs,
+    color: colors.success[500],
+    fontWeight: fontWeight.semibold,
+  },
+  pinBox: {
+    backgroundColor: colors.white,
+    borderRadius: borderRadius.lg,
+    borderWidth: 1,
+    borderColor: colors.neutral[200],
+    padding: spacing.md,
+    ...shadows.sm,
+  },
+  pinBoxHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: spacing.sm,
+  },
+  pinBoxLabel: {
+    flex: 1,
+    fontSize: fontSize.xs,
+    fontWeight: fontWeight.bold,
+    color: colors.neutral[800],
+  },
+  pinVerifiedBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    backgroundColor: colors.success[600],
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: borderRadius.full,
+  },
+  pinVerifiedText: {
+    fontSize: 10,
+    fontWeight: fontWeight.bold,
+    color: colors.white,
+  },
+  pinInputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  pinInput: {
+    width: 110,
+    height: 44,
+    borderRadius: borderRadius.md,
+    borderWidth: 1.5,
+    borderColor: colors.primary[600],
+    backgroundColor: colors.primary[50],
+    textAlign: 'center',
+    fontSize: fontSize.lg,
+    fontWeight: fontWeight.bold,
+    letterSpacing: 6,
+    color: colors.neutral[900],
+  },
+  pinHintText: {
+    flex: 1,
+    fontSize: fontSize.xs,
+    color: colors.neutral[500],
+  },
+  pinVerifiedHintText: {
+    flex: 1,
+    fontSize: fontSize.xs,
+    color: colors.success[700],
+    fontWeight: fontWeight.semibold,
+  },
   btn: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1462,7 +1437,7 @@ const styles = StyleSheet.create({
   btnTextLight: { color: colors.white, fontSize: fontSize.base, fontWeight: fontWeight.bold },
   btnTextDark:  { color: colors.neutral[800], fontSize: fontSize.base, fontWeight: fontWeight.bold },
   webMapContainer: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     backgroundColor: '#0F172A',
     justifyContent: 'center',
     alignItems: 'center',

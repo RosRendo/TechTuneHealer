@@ -10,6 +10,7 @@ import {
   Alert,
   Image,
   Platform,
+  Modal,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -44,6 +45,7 @@ import { Booking } from "../../types";
 import { AnimatedEntrance } from "../../components/AnimatedEntrance";
 import { LanguageToggle } from "../../components/LanguageToggle";
 import { AppLogo } from "../../components/AppLogo";
+import { SlideToConfirm } from "../../components/SlideToConfirm";
 import {
   getProviderAvatarUrl,
   getCustomerAvatarUrl,
@@ -105,18 +107,30 @@ const BookingItem: React.FC<BookingItemProps> = ({ booking, onPress, onAccept, o
         <Text style={styles.cleanPriceTag}>${price}</Text>
       </View>
 
-      {/* 1 Ultra-Clean Subtitle Line: Service • Distance (KM) • Location */}
+      {/* Scheduled time chip (Screen 17 appointment queue) */}
+      {booking.scheduledTime && (
+        <View style={styles.cleanTimeRow}>
+          <Ionicons name="time-outline" size={12} color={colors.primary[600]} />
+          <Text style={styles.cleanTimeChipText}>
+            {booking.scheduledTime}
+            {" • "}
+            {booking.status === "pending" ? "Upcoming" : "Today"}
+          </Text>
+        </View>
+      )}
+
+      {/* 1 Ultra-Clean Subtitle Line: Service â€¢ Distance (KM) â€¢ Location */}
       <View style={styles.cleanVehicleRow}>
         <Ionicons name={serviceVisual.icon} size={13} color={colors.neutral[500]} />
         <Text style={styles.cleanServiceSubtitle}>{serviceVisual.label}</Text>
         {distanceText ? (
           <>
-            <Text style={styles.cleanDot}>•</Text>
+            <Text style={styles.cleanDot}>â€¢</Text>
             <Ionicons name="navigate" size={11} color={colors.primary[600]} />
             <Text style={styles.cleanDistanceText}>{distanceText}</Text>
           </>
         ) : null}
-        <Text style={styles.cleanDot}>•</Text>
+        <Text style={styles.cleanDot}>â€¢</Text>
         <Ionicons name="location-outline" size={12} color={colors.neutral[400]} />
         <Text style={styles.cleanMetaText} numberOfLines={1}>{conciseLocation}</Text>
       </View>
@@ -206,6 +220,25 @@ export default function DashboardScreen() {
   const [activeFilter, setActiveFilter] = useState<"pending" | "today">("pending");
   const [viewMode, setViewMode] = useState<"list" | "map">("list");
   const [selectedMapBookingId, setSelectedMapBookingId] = useState<string | null>(null);
+  // S18: Incoming Emergency Dispatch Alert modal state
+  const [dispatchModalId, setDispatchModalId] = useState<string | null>(null);
+  const [dispatchCountdown, setDispatchCountdown] = useState(30);
+  const dispatchModalBooking = bookings.find((b) => b.id === dispatchModalId) || null;
+
+  React.useEffect(() => {
+    if (!dispatchModalId) return;
+    const started = Date.now();
+    const interval = setInterval(() => {
+      const left = Math.max(0, 30 - Math.floor((Date.now() - started) / 1000));
+      setDispatchCountdown(left);
+      if (left === 0) {
+        clearInterval(interval);
+        // Timeout: pass the dispatch to the next available unit
+        setDispatchModalId(null);
+      }
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [dispatchModalId]);
   const selectedMapBooking = bookings.find((b) => b.id === selectedMapBookingId) || null;
   const activeDispatch = bookings.find(
     (b) => b.status?.toLowerCase() === "accepted" || b.status?.toLowerCase() === "in_progress"
@@ -255,6 +288,11 @@ export default function DashboardScreen() {
     setRefreshing(true);
     await fetchBookings();
     setRefreshing(false);
+  };
+
+  const handleRequestAccept = (id: string) => {
+    setDispatchCountdown(30);
+    setDispatchModalId(id);
   };
 
   const handleAcceptJob = async (id: string) => {
@@ -348,7 +386,7 @@ export default function DashboardScreen() {
   );
   const displayEarnings = monthlyRevenue > 0 ? `$${monthlyRevenue.toLocaleString()}` : "$1,250";
 
-  // ─── FULL-SCREEN MAP RADAR (NO HEADER, EDGE-TO-EDGE) ────────────────────────
+  // â”€â”€â”€ FULL-SCREEN MAP RADAR (NO HEADER, EDGE-TO-EDGE) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   if (viewMode === "map") {
     return (
       <View style={styles.fullScreenMapContainer}>
@@ -512,9 +550,9 @@ export default function DashboardScreen() {
             <View style={styles.radarCardDismissRow}>
               <Text style={styles.radarCardDismissLabel}>
                 {selectedMapBooking.status?.toLowerCase() === "accepted" || selectedMapBooking.status?.toLowerCase() === "in_progress"
-                  ? "🚗 Active Dispatch · En Route"
+                  ? "ðŸš— Active Dispatch Â· En Route"
                   : selectedMapBooking.isEmergency
-                    ? "🚨 Urgent Breakdown"
+                    ? "ðŸš¨ Urgent Breakdown"
                     : "Scheduled Dispatch"}
               </Text>
               <TouchableOpacity
@@ -533,7 +571,7 @@ export default function DashboardScreen() {
                 bookingId: selectedMapBooking.id,
                 providerCoords: liveLocation || providerCoords,
               } as any)}
-              onAccept={handleAcceptJob}
+              onAccept={handleRequestAccept}
               onDecline={handleDeclineJob}
             />
           </View>
@@ -550,8 +588,8 @@ export default function DashboardScreen() {
               <View style={styles.activePillDotGreen} />
               <View style={{ flex: 1 }}>
                 <Text style={styles.activeDispatchPillTitle} numberOfLines={1}>
-                  {language === "km" ? "កំពុងធ្វើដំណើរ · " : "En Route · "}
-                  {activeDispatch.customerName || (language === "km" ? "អតិថិជន" : "Customer")}
+                  {language === "km" ? "áž€áŸ†áž–áž»áž„áž’áŸ’ážœáž¾ážŠáŸ†ážŽáž¾ážš Â· " : "En Route Â· "}
+                  {activeDispatch.customerName || (language === "km" ? "áž¢ážáž·ážáž·áž‡áž“" : "Customer")}
                 </Text>
                 <Text style={styles.activeDispatchPillSub} numberOfLines={1}>
                   {activeDispatch.serviceType}
@@ -561,7 +599,7 @@ export default function DashboardScreen() {
             <View style={styles.activeDispatchOpenBtn}>
               <Ionicons name="navigate" size={13} color={colors.white} />
               <Text style={styles.activeDispatchOpenText}>
-                {language === "km" ? "បើកផ្លូវ" : "Open Route"}
+                {language === "km" ? "áž”áž¾áž€áž•áŸ’áž›áž¼ážœ" : "Open Route"}
               </Text>
             </View>
           </TouchableOpacity>
@@ -571,8 +609,8 @@ export default function DashboardScreen() {
             <Text style={styles.floatingCounterText}>
               {radarBookings.filter((b) => b.status?.toLowerCase() === "pending").length}{" "}
               {language === "km"
-                ? "សំណើក្នុងតំបន់ · ចុចលើម្ជុលដើម្បីមើល"
-                : "incoming requests in range · Tap a pin"}
+                ? "ážŸáŸ†ážŽáž¾áž€áŸ’áž“áž»áž„ážáŸ†áž”áž“áŸ‹ Â· áž…áž»áž…áž›áž¾áž˜áŸ’áž‡áž»áž›ážŠáž¾áž˜áŸ’áž”áž¸áž˜áž¾áž›"
+                : "incoming requests in range Â· Tap a pin"}
             </Text>
           </View>
         )}
@@ -677,57 +715,49 @@ export default function DashboardScreen() {
             </TouchableOpacity>
           )}
 
-          {/* 1-Row Interactive Glance Bar (Direct Touchpoints to Schedule, Pending, Earnings, Reviews) */}
-          <View style={styles.glanceCard}>
-            <TouchableOpacity
-              style={styles.glanceItem}
-              onPress={() => setActiveFilter("today")}
-              activeOpacity={0.7}
-            >
-              <Text style={[styles.glanceValue, activeFilter === "today" && { color: colors.primary[600] }]}>
-                {todayBookings.length}
+          {/* Today's Performance Metrics — 4 Grid Tiles (Batch 5 / Screen 17) */}
+          <View style={styles.metricGrid}>
+            <View style={styles.metricTile}>
+              <View style={[styles.metricIcon, { backgroundColor: colors.success[50] }]}>
+                <Ionicons name="wallet-outline" size={14} color={colors.success[600]} />
+              </View>
+              <Text style={styles.metricValue}>{displayEarnings}</Text>
+              <Text style={[styles.metricSub, { color: colors.success[600] }]}>Today&apos;s Earnings</Text>
+            </View>
+
+            <View style={styles.metricTile}>
+              <View style={[styles.metricIcon, { backgroundColor: colors.primary[50] }]}>
+                <Ionicons name="checkmark-done-circle" size={14} color={colors.primary[600]} />
+              </View>
+              <Text style={styles.metricValue}>{todayBookings.length} Jobs</Text>
+              <Text style={styles.metricSub}>Avg. ~38 mins/job</Text>
+            </View>
+
+            <View style={styles.metricTile}>
+              <View style={[styles.metricIcon, { backgroundColor: colors.warning[50] }]}>
+                <Ionicons name="stats-chart-outline" size={14} color={colors.warning[600]} />
+              </View>
+              <Text style={styles.metricValue}>
+                {bookings.length > 0
+                  ? `${Math.round(
+                      (bookings.filter((b) => b.status?.toLowerCase() !== "cancelled").length /
+                        bookings.length) *
+                        100
+                    )}%`
+                  : "98%"}
               </Text>
-              <Text style={[styles.glanceLabel, activeFilter === "today" && { color: colors.primary[700], fontWeight: "700" }]}>
-                {t("todayJobs")}
+              <Text style={styles.metricSub}>Acceptance Rate</Text>
+            </View>
+
+            <View style={styles.metricTile}>
+              <View style={[styles.metricIcon, { backgroundColor: colors.secondary[50] }]}>
+                <Ionicons name="star" size={14} color={colors.secondary[600]} />
+              </View>
+              <Text style={styles.metricValue}>4.9 ★</Text>
+              <Text style={styles.metricSub}>
+                {bookings.filter((b) => b.status?.toLowerCase() === "completed").length || 12} reviews
               </Text>
-            </TouchableOpacity>
-
-            <View style={styles.glanceDivider} />
-
-            <TouchableOpacity
-              style={styles.glanceItem}
-              onPress={() => setActiveFilter("pending")}
-              activeOpacity={0.7}
-            >
-              <Text style={[styles.glanceValue, pendingBookings.length > 0 && { color: colors.error[600] }]}>
-                {pendingBookings.length}
-              </Text>
-              <Text style={[styles.glanceLabel, activeFilter === "pending" && { color: colors.error[700], fontWeight: "700" }]}>
-                {t("pendingJobs")}
-              </Text>
-            </TouchableOpacity>
-
-            <View style={styles.glanceDivider} />
-
-            <TouchableOpacity
-              style={styles.glanceItem}
-              onPress={() => navigation.navigate("Earnings" as any)}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.glanceValue}>{displayEarnings}</Text>
-              <Text style={styles.glanceLabel}>{t("tabEarnings")} ›</Text>
-            </TouchableOpacity>
-
-            <View style={styles.glanceDivider} />
-
-            <TouchableOpacity
-              style={styles.glanceItem}
-              onPress={() => navigation.navigate("Reviews" as any)}
-              activeOpacity={0.7}
-            >
-              <Text style={[styles.glanceValue, { color: colors.secondary[600] }]}>4.9 ★</Text>
-              <Text style={styles.glanceLabel}>{t("tabReviews")} ›</Text>
-            </TouchableOpacity>
+            </View>
           </View>
         </AnimatedEntrance>
 
@@ -755,8 +785,8 @@ export default function DashboardScreen() {
               />
               <Text style={[styles.compactChipText, isEmergencyOnCall && { color: colors.secondary[700], fontWeight: "700" }]}>
                 {isEmergencyOnCall
-                  ? (language === "km" ? "វេនយប់ 24/7" : "24/7 Night Duty")
-                  : (language === "km" ? "ម៉ោងធម្មតា" : "Normal Hours")}
+                  ? (language === "km" ? "ážœáŸáž“áž™áž”áŸ‹ 24/7" : "24/7 Night Duty")
+                  : (language === "km" ? "áž˜áŸ‰áŸ„áž„áž’áž˜áŸ’áž˜ážáž¶" : "Normal Hours")}
               </Text>
             </TouchableOpacity>
           </View>
@@ -829,12 +859,12 @@ export default function DashboardScreen() {
                 </View>
                 <Text style={styles.emptyStateTitle}>
                   {language === "km"
-                    ? (activeFilter === "pending" ? "មិនមានការងាររង់ចាំទេ" : "មិនមានការងារថ្ងៃនេះទេ")
+                    ? (activeFilter === "pending" ? "áž˜áž·áž“áž˜áž¶áž“áž€áž¶ážšáž„áž¶ážšážšáž„áŸ‹áž…áž¶áŸ†áž‘áŸ" : "áž˜áž·áž“áž˜áž¶áž“áž€áž¶ážšáž„áž¶ážšážáŸ’áž„áŸƒáž“áŸáŸ‡áž‘áŸ")
                     : `No ${activeFilter} jobs`}
                 </Text>
                 <Text style={styles.emptyStateSubtitle}>
                   {language === "km"
-                    ? "អ្នកបានពិនិត្យរួចរាល់ហើយ! សូមប្រាកដថាបានបើកទទួលការងារ ដើម្បីទទួលបានការជូនដំណឹងសង្គ្រោះបន្ទាន់។"
+                    ? "áž¢áŸ’áž“áž€áž”áž¶áž“áž–áž·áž“áž·ážáŸ’áž™ážšáž½áž…ážšáž¶áž›áŸ‹áž áž¾áž™! ážŸáž¼áž˜áž”áŸ’ážšáž¶áž€ážŠážáž¶áž”áž¶áž“áž”áž¾áž€áž‘áž‘áž½áž›áž€áž¶ážšáž„áž¶ážš ážŠáž¾áž˜áŸ’áž”áž¸áž‘áž‘áž½áž›áž”áž¶áž“áž€áž¶ážšáž‡áž¼áž“ážŠáŸ†ážŽáž¹áž„ážŸáž„áŸ’áž‚áŸ’ážšáŸ„áŸ‡áž”áž“áŸ’áž‘áž¶áž“áŸ‹áŸ”"
                     : "You are all caught up! Make sure you are Online to receive emergency alerts."}
                 </Text>
               </View>
@@ -850,7 +880,7 @@ export default function DashboardScreen() {
                     bookingId: booking.id,
                     providerCoords: liveLocation || providerCoords,
                   } as any)}
-                  onAccept={handleAcceptJob}
+                  onAccept={handleRequestAccept}
                   onDecline={handleDeclineJob}
                 />
               ))
@@ -858,6 +888,111 @@ export default function DashboardScreen() {
           </View>
         </AnimatedEntrance>
       </ScrollView>
+
+      {/* S18: Incoming Emergency Dispatch Alert Modal */}
+      <Modal
+        visible={Boolean(dispatchModalBooking)}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setDispatchModalId(null)}
+      >
+        <View style={styles.modalBackdrop}>
+          <View style={styles.dispatchModalCard}>
+            {/* Urgency header with countdown */}
+            <View style={styles.dispatchUrgencyRow}>
+              <View style={styles.countdownRing}>
+                <Text style={styles.countdownText}>
+                  {dispatchModalBooking?.isEmergency ? `00:${String(dispatchCountdown).padStart(2, "0")}` : "—"}
+                </Text>
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.dispatchModalTitle}>Urgent Roadside Dispatch Request</Text>
+                <Text style={styles.dispatchModalSubtitle}>
+                  Disposable response window — passes to the next unit on expiry
+                </Text>
+              </View>
+            </View>
+
+            {/* Payout & Distance highlight */}
+            <View style={styles.dispatchHighlightRow}>
+              <View style={styles.dispatchHighlightBox}>
+                <Text style={styles.dispatchHighlightLabel}>Net Payout</Text>
+                <Text style={styles.dispatchHighlightValue}>
+                  ${dispatchModalBooking?.estimatedPrice || (dispatchModalBooking as any)?.totalPrice || 45}
+                </Text>
+              </View>
+              <View style={styles.dispatchHighlightDivider} />
+              <View style={styles.dispatchHighlightBox}>
+                <Text style={styles.dispatchHighlightLabel}>Distance</Text>
+                <Text style={styles.dispatchHighlightValue}>
+                  {getBookingDistanceText(dispatchModalBooking?.customerLocation) || "1.4 km"}
+                </Text>
+              </View>
+            </View>
+
+            {/* Incident & vehicle details */}
+            <View style={styles.dispatchDetailsCard}>
+              <View style={styles.dispatchDetailRow}>
+                <Ionicons name="construct-outline" size={14} color={colors.primary[600]} />
+                <Text style={styles.dispatchDetailValue} numberOfLines={1}>
+                  {dispatchModalBooking?.serviceType || "Emergency Battery Jumpstart & Diagnostic"}
+                </Text>
+              </View>
+              <View style={styles.dispatchDetailRow}>
+                <Ionicons name="location-outline" size={14} color={colors.neutral[500]} />
+                <Text style={styles.dispatchDetailValue} numberOfLines={1}>
+                  {getConciseLocation(dispatchModalBooking?.customerLocation?.address) ||
+                    "Russian Blvd (Near Pochentong Flyover)"}
+                </Text>
+              </View>
+              <View style={styles.dispatchDetailRow}>
+                <Ionicons name="car-sport-outline" size={14} color={colors.neutral[500]} />
+                <Text style={styles.dispatchDetailValue} numberOfLines={1}>
+                  {dispatchModalBooking?.vehicle?.make || "Toyota"}{" "}
+                  {dispatchModalBooking?.vehicle?.model || "Hilux Revo"}{" "}
+                  (Plate: {dispatchModalBooking?.vehicle?.plateNumber || "2BB-1234"})
+                </Text>
+              </View>
+              {Boolean(dispatchModalBooking?.notes) && (
+                <View style={styles.dispatchNoteRow}>
+                  <Text style={styles.dispatchNoteText} numberOfLines={2}>
+                    &ldquo;{dispatchModalBooking?.notes}&rdquo;
+                  </Text>
+                </View>
+              )}
+            </View>
+
+            {/* Swipe-to-accept + decline */}
+            {dispatchModalBooking && (
+              <SlideToConfirm
+                label="Swipe to Accept Dispatch"
+                icon="checkmark"
+                color={colors.success[600]}
+                onConfirm={() => {
+                  const id = dispatchModalBooking.id;
+                  setDispatchModalId(null);
+                  handleAcceptJob(id);
+                }}
+                resetKey={dispatchModalBooking.id}
+              />
+            )}
+
+            <TouchableOpacity
+              style={styles.declineDispatchButton}
+              onPress={() => {
+                const id = dispatchModalId;
+                setDispatchModalId(null);
+                if (id) handleDeclineJob(id);
+              }}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.declineDispatchText}>
+                {t("decline")} (Pass to Next Unit)
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -1051,43 +1186,44 @@ const styles = StyleSheet.create({
     color: colors.primary[700],
   },
 
-  // 1-Row Glanceable Operations Bar
-  glanceCard: {
+  // Today's Performance Metrics — 4 grid tiles (Batch 5 Screen 17)
+  metricGrid: {
     flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    backgroundColor: colors.white,
+    flexWrap: "wrap",
+    gap: spacing.sm,
     marginHorizontal: spacing.xl,
     marginTop: spacing.md,
     marginBottom: spacing.sm,
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.lg,
-    borderRadius: 16,
+  },
+  metricTile: {
+    flex: 1,
+    minWidth: (width - spacing.xl * 2 - spacing.sm * 3) / 2,
+    backgroundColor: colors.white,
+    borderRadius: 14,
+    padding: spacing.md,
     borderWidth: 1,
     borderColor: "rgba(0,0,0,0.05)",
     ...shadows.sm,
   },
-  glanceItem: {
-    flex: 1,
+  metricIcon: {
+    width: 26,
+    height: 26,
+    borderRadius: 8,
+    justifyContent: "center",
     alignItems: "center",
+    marginBottom: spacing.xs,
   },
-  glanceValue: {
+  metricValue: {
     fontSize: 18,
     fontWeight: "800",
     color: colors.neutral[900],
+    letterSpacing: -0.3,
   },
-  glanceLabel: {
-    fontSize: 11,
+  metricSub: {
+    fontSize: 10,
     fontWeight: "600",
     color: colors.neutral[500],
     marginTop: 2,
-    textTransform: "uppercase",
-    letterSpacing: 0.3,
-  },
-  glanceDivider: {
-    width: 1,
-    height: 28,
-    backgroundColor: colors.neutral[200],
   },
 
   // Compact Readiness Strip
@@ -1517,6 +1653,22 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: colors.neutral[800],
   },
+  cleanTimeRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    backgroundColor: colors.primary[50],
+    alignSelf: "flex-start",
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
+    marginBottom: 4,
+  },
+  cleanTimeChipText: {
+    fontSize: 11,
+    fontWeight: "700",
+    color: colors.primary[700],
+  },
   cleanDot: {
     fontSize: 12,
     color: colors.neutral[400],
@@ -1612,5 +1764,122 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: "700",
     color: colors.white,
+  },
+
+  // S18: Incoming Emergency Dispatch Alert modal
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: "rgba(15, 23, 42, 0.6)",
+    justifyContent: "flex-end",
+    padding: spacing.lg,
+  },
+  dispatchModalCard: {
+    backgroundColor: colors.white,
+    borderRadius: 24,
+    padding: spacing.xl,
+    gap: spacing.md,
+    ...shadows.lg,
+  },
+  dispatchUrgencyRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.md,
+  },
+  countdownRing: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    borderWidth: 4,
+    borderColor: colors.error[500],
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: colors.error[50],
+  },
+  countdownText: {
+    fontSize: 12,
+    fontWeight: "800",
+    color: colors.error[600],
+  },
+  dispatchModalTitle: {
+    fontSize: 17,
+    fontWeight: "800",
+    color: colors.neutral[900],
+  },
+  dispatchModalSubtitle: {
+    fontSize: 12,
+    color: colors.neutral[500],
+    marginTop: 2,
+  },
+  dispatchHighlightRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: colors.neutral[50],
+    borderRadius: 14,
+    padding: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.neutral[200],
+  },
+  dispatchHighlightBox: {
+    flex: 1,
+    alignItems: "center",
+  },
+  dispatchHighlightDivider: {
+    width: 1,
+    height: 36,
+    backgroundColor: colors.neutral[200],
+  },
+  dispatchHighlightLabel: {
+    fontSize: 11,
+    fontWeight: "600",
+    color: colors.neutral[500],
+    textTransform: "uppercase",
+    letterSpacing: 0.4,
+  },
+  dispatchHighlightValue: {
+    fontSize: 20,
+    fontWeight: "800",
+    color: colors.success[700],
+    marginTop: 2,
+  },
+  dispatchDetailsCard: {
+    backgroundColor: colors.white,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: colors.neutral[200],
+    padding: spacing.md,
+    gap: 8,
+  },
+  dispatchDetailRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  dispatchDetailValue: {
+    flex: 1,
+    fontSize: 13,
+    fontWeight: "600",
+    color: colors.neutral[800],
+  },
+  dispatchNoteRow: {
+    backgroundColor: colors.warning[50],
+    borderRadius: 10,
+    padding: spacing.sm,
+  },
+  dispatchNoteText: {
+    fontSize: 12,
+    color: colors.warning[700],
+    fontStyle: "italic",
+  },
+  declineDispatchButton: {
+    paddingVertical: 10,
+    alignItems: "center",
+    borderRadius: borderRadius.lg,
+    borderWidth: 1,
+    borderColor: colors.neutral[300],
+  },
+  declineDispatchText: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: colors.neutral[600],
   },
 });

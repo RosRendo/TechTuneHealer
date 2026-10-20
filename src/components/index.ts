@@ -8,4 +8,5 @@ export { default as Loading } from './Loading';
 export { default as EmptyState } from './EmptyState';
 export { default as AnimatedEntrance } from './AnimatedEntrance';
 export { default as AppLogo } from './AppLogo';
+export { default as SlideToConfirm } from './SlideToConfirm';
 export * from './CameraCapture';
