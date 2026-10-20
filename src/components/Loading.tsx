@@ -50,7 +50,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   overlay: {
-    ...StyleSheet.absoluteFill,
+    ...StyleSheet.absoluteFillObject,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
     zIndex: 999,
   },

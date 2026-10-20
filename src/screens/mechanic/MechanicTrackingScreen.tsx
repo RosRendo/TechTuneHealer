@@ -1462,7 +1462,7 @@ const styles = StyleSheet.create({
   btnTextLight: { color: colors.white, fontSize: fontSize.base, fontWeight: fontWeight.bold },
   btnTextDark:  { color: colors.neutral[800], fontSize: fontSize.base, fontWeight: fontWeight.bold },
   webMapContainer: {
-    ...StyleSheet.absoluteFill,
+    ...StyleSheet.absoluteFillObject,
     backgroundColor: '#0F172A',
     justifyContent: 'center',
     alignItems: 'center',
