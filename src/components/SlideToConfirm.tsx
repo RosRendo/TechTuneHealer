@@ -73,6 +73,14 @@ export function SlideToConfirm({
     });
   }, [onConfirm, pan]);
 
+  // PanResponder is created once, so it must reach for the LATEST props
+  // through refs — otherwise it would call a stale onConfirm snapshot
+  // (e.g. one that still sees `pinVerified === false`).
+  const triggerSlideSuccessRef = useRef(triggerSlideSuccess);
+  useEffect(() => {
+    triggerSlideSuccessRef.current = triggerSlideSuccess;
+  });
+
   const panResponder = useRef(
     PanResponder.create({
       onStartShouldSetPanResponder: () => true,
@@ -100,7 +108,7 @@ export function SlideToConfirm({
 
         const threshold = maxDragRef.current * 0.6;
         if (gestureState.dx > threshold) {
-          triggerSlideSuccess();
+          triggerSlideSuccessRef.current();
         } else {
           Animated.spring(pan, {
             toValue: 0,
