@@ -9,6 +9,10 @@ import {
   Platform,
   Linking,
   TextInput,
+  Modal,
+  Keyboard,
+  KeyboardAvoidingView,
+  Pressable,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRoute, useNavigation } from '@react-navigation/native';
@@ -139,6 +143,7 @@ export function MechanicTrackingScreen() {
   const [isTracking, setIsTracking] = useState(false);
   const [status, setStatus] = useState<'idle' | 'tracking' | 'arrived' | 'in_progress' | 'completed'>('idle');
   const [pinInput, setPinInput] = useState('');
+  const [pinModalVisible, setPinModalVisible] = useState(false);
   const [pinVerified, setPinVerified] = useState(false);
   // Initialize coords from live position if available, or fallback to default provider pos until GPS loads
   const [coords, setCoords] = useState<{ lat: number; lng: number }>(initialLivePos || defaultProviderPos);
@@ -170,7 +175,7 @@ export function MechanicTrackingScreen() {
     };
   }, [coords, initialLivePos, defaultProviderPos, currentBooking, getDestinationCoords]);
 
-  // â”€â”€ Auto-fit map viewport to frame both specialist and customer â”€â”€â”€â”€â”€â”€â”€â”€
+  // Ã¢â€â‚¬Ã¢â€â‚¬ Auto-fit map viewport to frame both specialist and customer Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   const fitMapBounds = useCallback(() => {
     if (!mapRef.current) return;
     const currentLoc = coords || defaultProviderPos;
@@ -189,7 +194,7 @@ export function MechanicTrackingScreen() {
     });
   }, [coords, defaultProviderPos, currentBooking, getDestinationCoords, routeCoords]);
 
-  // â”€â”€ Connect socket on mount â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // Ã¢â€â‚¬Ã¢â€â‚¬ Connect socket on mount Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   useEffect(() => {
     let active = true;
 
@@ -200,7 +205,7 @@ export function MechanicTrackingScreen() {
       const socket = io(WS_URL, { auth: { token } });
       socketRef.current = socket;
 
-      socket.on('connect', () => console.log('ðŸ”Œ Socket connected'));
+      socket.on('connect', () => console.log('Ã°Å¸â€Å’ Socket connected'));
       socket.on('connect_error', (err) => console.warn('Socket connection failed:', err.message));
     })();
 
@@ -211,21 +216,21 @@ export function MechanicTrackingScreen() {
     };
   }, []);
 
-  // â”€â”€ Handle app background / foreground â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // Ã¢â€â‚¬Ã¢â€â‚¬ Handle app background / foreground Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   useEffect(() => {
     const sub = AppState.addEventListener('change', nextState => {
       if (
         appStateRef.current.match(/inactive|background/) &&
         nextState === 'active'
       ) {
-        // App came to foreground â€“ tracking continues silently
+        // App came to foreground Ã¢â‚¬â€œ tracking continues silently
       }
       appStateRef.current = nextState;
     });
     return () => sub.remove();
   }, []);
 
-  // â”€â”€ Sync destination and route when currentBooking loads or changes â”€â”€â”€â”€â”€â”€
+  // Ã¢â€â‚¬Ã¢â€â‚¬ Sync destination and route when currentBooking loads or changes Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   useEffect(() => {
     const dest = getDestinationCoords(currentBooking);
     customerCoordsRef.current = dest;
@@ -280,7 +285,7 @@ export function MechanicTrackingScreen() {
   }, [currentBooking, getDestinationCoords, defaultProviderPos, initialLivePos, setStoreLocation]);
 
 
-  // â”€â”€ Fetch OSRM Route with HTTPS & Reliable Waypoint Fallback â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // Ã¢â€â‚¬Ã¢â€â‚¬ Fetch OSRM Route with HTTPS & Reliable Waypoint Fallback Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   const fetchRoute = async (start: { lat: number; lng: number }, end: { lat: number; lng: number }) => {
     try {
       const response = await fetch(
@@ -313,7 +318,7 @@ export function MechanicTrackingScreen() {
     setTimeout(fitMapBounds, 400);
   };
 
-  // â”€â”€ Start tracking (Real GPS & Simulation) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // Ã¢â€â‚¬Ã¢â€â‚¬ Start tracking (Real GPS & Simulation) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   const startTracking = useCallback(async () => {
     setIsTracking(true);
     setStatus('tracking');
@@ -404,7 +409,7 @@ export function MechanicTrackingScreen() {
     } as any;
   }, [bookingId, coords, liveGpsCoords, initialLivePos, defaultProviderPos, currentBooking, getDestinationCoords, updateBookingStatus]);
 
-  // â”€â”€ Stop tracking â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // Ã¢â€â‚¬Ã¢â€â‚¬ Stop tracking Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   const stopTracking = useCallback(() => {
     locationSubRef.current?.remove();
     locationSubRef.current = null;
@@ -420,20 +425,20 @@ export function MechanicTrackingScreen() {
     }
   }, [currentBooking?.status, status, startTracking]);
 
-  // â”€â”€ Signal arrival â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // Ã¢â€â‚¬Ã¢â€â‚¬ Signal arrival Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   const signalArrival = useCallback(() => {
     socketRef.current?.emit('mechanic:arrived', { bookingId });
     stopTracking();
     setStatus('arrived');
-    Alert.alert('Arrival Confirmed! ðŸš—', 'The customer has been alerted that you have reached the breakdown vehicle.');
+    Alert.alert('Arrival Confirmed! Ã°Å¸Å¡â€”', 'The customer has been alerted that you have reached the breakdown vehicle.');
   }, [bookingId, stopTracking]);
 
-  // â”€â”€ Complete Job & Invoice â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // Ã¢â€â‚¬Ã¢â€â‚¬ Complete Job & Invoice Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   const handleCompleteJob = useCallback(() => {
     const totalAmount = currentBooking?.estimatedPrice || currentBooking?.totalPrice || 45;
     Alert.alert(
       'Complete Service & Issue Invoice',
-      `Summary:\nâ€¢ Service: ${currentBooking?.serviceType || 'Emergency Roadside Assistance'}\nâ€¢ Emergency Callout Fee: $25.00\nâ€¢ Diagnostics & Labor: $${Math.max(0, totalAmount - 25).toFixed(2)}\nâ€¢ Total Amount: $${Number(totalAmount).toFixed(2)}\n\nConfirm job completion and issue customer invoice?`,
+      `Summary:\nÃ¢â‚¬Â¢ Service: ${currentBooking?.serviceType || 'Emergency Roadside Assistance'}\nÃ¢â‚¬Â¢ Emergency Callout Fee: $25.00\nÃ¢â‚¬Â¢ Diagnostics & Labor: $${Math.max(0, totalAmount - 25).toFixed(2)}\nÃ¢â‚¬Â¢ Total Amount: $${Number(totalAmount).toFixed(2)}\n\nConfirm job completion and issue customer invoice?`,
       [
         { text: 'Cancel', style: 'cancel' },
         {
@@ -443,14 +448,14 @@ export function MechanicTrackingScreen() {
               await updateBookingStatus(bookingId, 'completed');
             }
             setStatus('completed');
-            Alert.alert('Job Completed! ðŸŽ‰', 'Customer invoice generated and payout recorded in your earnings.');
+            Alert.alert('Job Completed! Ã°Å¸Å½â€°', 'Customer invoice generated and payout recorded in your earnings.');
           },
         },
       ]
     );
    }, [bookingId, currentBooking, updateBookingStatus]);
 
-  // ── Live route telemetry (distance + ETA at ~25 km/h city driving) ───────
+  // â”€â”€ Live route telemetry (distance + ETA at ~25 km/h city driving) â”€â”€â”€â”€â”€â”€â”€
   const remainingKm = haversineKm(coords || defaultProviderPos, customerCoords);
   const remainingM = Math.round(remainingKm * 1000);
   const etaMinutes = Math.max(1, Math.round(remainingKm / 0.42));
@@ -464,11 +469,14 @@ export function MechanicTrackingScreen() {
     setPinInput(digits);
     if (digits.length === 4 && digits === securityPin) {
       setPinVerified(true);
+      // Verified: drop the keyboard and close the PIN entry overlay
+      Keyboard.dismiss();
+      setPinModalVisible(false);
     }
   };
 
 
-  // â”€â”€ Status styles â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // Ã¢â€â‚¬Ã¢â€â‚¬ Status styles Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   const statusMeta = {
     idle:        { icon: 'location-outline', color: colors.neutral[500], label: 'Ready for Dispatch' },
     tracking:    { icon: 'navigate',         color: colors.success[600], label: 'En Route to Motorist' },
@@ -498,7 +506,7 @@ export function MechanicTrackingScreen() {
                 <View style={styles.webGpsHeader}>
                   <View style={styles.webPulseDot} />
                   <Text style={styles.webGpsHeaderText}>
-                    LIVE TELEMETRY RADAR â€¢ PHNOM PENH
+                    LIVE TELEMETRY RADAR Ã¢â‚¬Â¢ PHNOM PENH
                   </Text>
                 </View>
 
@@ -623,7 +631,7 @@ export function MechanicTrackingScreen() {
                 {currentBooking?.customer?.name || currentBooking?.customerName || "Stranded Motorist"}
               </Text>
               <Text style={styles.serviceSubText} numberOfLines={1}>
-                #{bookingId?.slice(-6).toUpperCase() || 'BK-8902'} â€¢ {currentBooking?.serviceType || "Emergency Roadside Assistance"}
+                #{bookingId?.slice(-6).toUpperCase() || 'BK-8902'} Ã¢â‚¬Â¢ {currentBooking?.serviceType || "Emergency Roadside Assistance"}
               </Text>
             </View>
             <View style={styles.etaBadge}>
@@ -642,7 +650,7 @@ export function MechanicTrackingScreen() {
               </Text>
             </View>
             <View style={styles.cambodianPlateBadge}>
-              <Text style={styles.cambodianPlateFlag}>ðŸ‡°ðŸ‡­</Text>
+              <Text style={styles.cambodianPlateFlag}>Ã°Å¸â€¡Â°Ã°Å¸â€¡Â­</Text>
               <Text style={styles.cambodianPlateText}>
                 {currentBooking?.vehicle?.plateNumber || "Phnom Penh 2B-8899"}
               </Text>
@@ -671,10 +679,10 @@ export function MechanicTrackingScreen() {
               <Text style={styles.navBannerTitle} numberOfLines={1}>
                 {remainingM >= 1000
                   ? `Continue ${(remainingM / 1000).toFixed(1)} km along the route`
-                  : `In ${remainingM} m — follow the highlighted route`}
+                  : `In ${remainingM} m â€” follow the highlighted route`}
               </Text>
               <Text style={styles.navBannerSub} numberOfLines={1}>
-                Live GPS guidance • head toward breakdown pin
+                Live GPS guidance â€¢ head toward breakdown pin
               </Text>
             </View>
             <View style={styles.navBannerEta}>
@@ -820,7 +828,7 @@ export function MechanicTrackingScreen() {
             </View>
           )}
 
-          {/* STAGE 3: Arrived (At Vehicle) — requires customer 4-digit PIN */}
+          {/* STAGE 3: Arrived (At Vehicle) â€” requires customer 4-digit PIN */}
           {status === 'arrived' && (
             <View style={styles.stageButtonGroup}>
               <View style={styles.pinBox}>
@@ -834,23 +842,38 @@ export function MechanicTrackingScreen() {
                     </View>
                   )}
                 </View>
-                <View style={styles.pinInputRow}>
-                  <TextInput
-                    style={styles.pinInput}
-                    value={pinInput}
-                    onChangeText={handlePinSubmit}
-                    keyboardType="number-pad"
-                    maxLength={4}
-                    placeholder="- - - -"
-                    placeholderTextColor={colors.neutral[400]}
-                  />
+                <Pressable onPress={() => !pinVerified && setPinModalVisible(true)}>
+                  <View style={[styles.pinInputRow]}>
+                    {Array.from({ length: 4 }).map((_, idx) => {
+                      const digit = pinInput[idx];
+                      const filled = Boolean(digit);
+                      const match = pinVerified;
+                      return (
+                        <View
+                          key={idx}
+                          style={[
+                            styles.pinDisplayDigit,
+                            filled && !pinVerified && styles.pinDisplayDigitFilled,
+                            match && styles.pinDisplayDigitVerified,
+                          ]}
+                        >
+                          <Text style={[styles.pinDisplayDigitText, !filled && styles.pinDisplayDigitEmpty]}>
+                            {filled ? digit : (match ? 'â—' : '\u2022')}
+                          </Text>
+                        </View>
+                      );
+                    })}
+                  </View>
                   {!pinVerified && (
-                    <Text style={styles.pinHintText}>Ask the customer to share the PIN shown on their screen</Text>
+                    <View style={styles.pinTapCtaRow}>
+                      <Ionicons name="keypad-outline" size={14} color={colors.primary[600]} />
+                      <Text style={styles.pinTapCtaText}>Tap to enter the 4-digit PIN</Text>
+                    </View>
                   )}
                   {pinVerified && (
                     <Text style={styles.pinVerifiedHintText}>Customer identity confirmed</Text>
                   )}
-                </View>
+                </Pressable>
               </View>
               <SlideToConfirm
                 label="Slide to Start Repair"
@@ -904,6 +927,65 @@ export function MechanicTrackingScreen() {
           )}
         </View>
       </AnimatedEntrance>
+
+      {/* PIN entry modal â€” floats centered above the keyboard so it's never covered */}
+      <Modal
+        visible={pinModalVisible && !pinVerified}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setPinModalVisible(false)}
+      >
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          style={styles.pinModalBackdrop}
+        >
+          <TouchableOpacity style={styles.pinModalBackdropTouch} activeOpacity={1} onPress={() => setPinModalVisible(false)} />
+          <View style={styles.pinModalCard}>
+            <View style={styles.pinModalHeader}>
+              <Ionicons name="keypad-outline" size={18} color={colors.primary[600]} />
+              <Text style={styles.pinModalTitle}>Customer Verification PIN</Text>
+              <TouchableOpacity onPress={() => setPinModalVisible(false)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                <Ionicons name="close" size={20} color={colors.neutral[500]} />
+              </TouchableOpacity>
+            </View>
+            <Text style={styles.pinModalSub}>
+              Ask the customer for the 4-digit PIN shown on their tracking screen
+            </Text>
+            <View style={styles.pinModalDigitsRow}>
+              {Array.from({ length: 4 }).map((_, idx) => {
+                const digit = pinInput[idx];
+                return (
+                  <View
+                    key={idx}
+                    style={[
+                      styles.pinDisplayDigit,
+                      Boolean(digit) && styles.pinDisplayDigitFilled,
+                      pinInput.length >= 4 && styles.pinDisplayDigitMismatch,
+                    ]}
+                  >
+                    <Text style={styles.pinDisplayDigitText}>{digit || ''}</Text>
+                  </View>
+                );
+              })}
+            </View>
+            {pinInput.length >= 4 && (
+              <Text style={styles.pinModalMismatch}>Wrong PIN â€” check with the customer again</Text>
+            )}
+            <TextInput
+              style={styles.pinModalHiddenInput}
+              value={pinInput}
+              onChangeText={handlePinSubmit}
+              keyboardType="number-pad"
+              autoFocus
+              maxLength={4}
+              contextMenuHidden
+            />
+            <TouchableOpacity style={styles.pinModalCancelBtn} onPress={() => setPinModalVisible(false)}>
+              <Text style={styles.pinModalCancelText}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -1397,23 +1479,119 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: spacing.sm,
   },
-  pinInput: {
-    width: 110,
-    height: 44,
+  pinDisplayDigit: {
+    flex: 1,
+    height: 48,
     borderRadius: borderRadius.md,
     borderWidth: 1.5,
+    borderColor: colors.neutral[300],
+    backgroundColor: colors.neutral[50],
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  pinDisplayDigitFilled: {
     borderColor: colors.primary[600],
     backgroundColor: colors.primary[50],
-    textAlign: 'center',
-    fontSize: fontSize.lg,
+  },
+  pinDisplayDigitVerified: {
+    borderColor: colors.success[600],
+    backgroundColor: colors.success[50],
+  },
+  pinDisplayDigitMismatch: {
+    borderColor: colors.error[500],
+    backgroundColor: colors.white,
+  },
+  pinDisplayDigitText: {
+    fontSize: fontSize.xl,
     fontWeight: fontWeight.bold,
-    letterSpacing: 6,
     color: colors.neutral[900],
   },
-  pinHintText: {
+  pinDisplayDigitEmpty: {
+    color: colors.neutral[300],
+    fontSize: fontSize.sm,
+  },
+  pinTapCtaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    marginTop: spacing.sm,
+  },
+  pinTapCtaText: {
+    fontSize: fontSize.xs,
+    color: colors.primary[700],
+    fontWeight: fontWeight.semibold,
+  },
+  pinModalBackdrop: {
     flex: 1,
+    backgroundColor: 'rgba(10, 13, 20, 0.55)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: spacing.lg,
+  },
+  pinModalBackdropTouch: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  pinModalCard: {
+    width: '100%',
+    maxWidth: 340,
+    backgroundColor: colors.white,
+    borderRadius: borderRadius.xl,
+    padding: spacing.lg,
+    alignItems: 'center',
+    ...shadows.lg,
+  },
+  pinModalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    width: '100%',
+  },
+  pinModalTitle: {
+    flex: 1,
+    fontSize: fontSize.base,
+    fontWeight: fontWeight.bold,
+    color: colors.neutral[900],
+  },
+  pinModalSub: {
     fontSize: fontSize.xs,
     color: colors.neutral[500],
+    textAlign: 'center',
+    marginTop: 4,
+    marginBottom: spacing.md,
+  },
+  pinModalDigitsRow: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    width: '100%',
+  },
+  pinModalHiddenInput: {
+    position: 'absolute',
+    width: 1,
+    height: 1,
+    opacity: 0,
+  },
+  pinModalMismatch: {
+    fontSize: fontSize.xs,
+    color: colors.error[500],
+    fontWeight: fontWeight.semibold,
+    marginTop: spacing.sm,
+    textAlign: 'center',
+  },
+  pinModalCancelBtn: {
+    marginTop: spacing.lg,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.xl,
+    borderRadius: borderRadius.full,
+    backgroundColor: colors.neutral[100],
+  },
+  pinModalCancelText: {
+    fontSize: fontSize.sm,
+    fontWeight: fontWeight.semibold,
+    color: colors.neutral[700],
   },
   pinVerifiedHintText: {
     flex: 1,
