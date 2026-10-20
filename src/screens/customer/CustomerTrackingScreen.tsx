@@ -411,12 +411,86 @@ export function CustomerTrackingScreen() {
           )}
         </View>
       </AnimatedEntrance>
+
+      {/* Security PIN card — share only with the mechanic upon arrival */}
+      {mechanicLocation && (
+        <AnimatedEntrance delay={180} direction="up">
+          <View style={styles.securityPinCard}>
+            <View style={styles.securityPinHeader}>
+              <Ionicons name="lock-closed" size={16} color={colors.neutral[700]} />
+              <Text style={styles.securityPinTitle}>Share this PIN with your mechanic</Text>
+            </View>
+            <Text style={styles.securityPinSub}>
+              Show the code only at your vehicle, when they arrive
+            </Text>
+            <View style={styles.securityPinDigits}>
+              {(
+                matchedBooking?.securityPin ||
+                (bookingId ? bookingId.replace(/\D/g, '').slice(-4).padStart(4, '0') : '4821')
+              )
+                .toString()
+                .split('')
+                .map((digit: string, idx: number) => (
+                  <View key={idx} style={styles.securityPinDigit}>
+                    <Text style={styles.securityPinDigitText}>{digit}</Text>
+                  </View>
+                ))}
+            </View>
+          </View>
+        </AnimatedEntrance>
+      )}
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.white },
+  securityPinCard: {
+    marginHorizontal: spacing.lg,
+    marginBottom: spacing.md,
+    backgroundColor: colors.neutral[50],
+    borderRadius: borderRadius.lg,
+    borderWidth: 1,
+    borderColor: colors.neutral[200],
+    padding: spacing.md,
+    alignItems: 'center',
+  },
+  securityPinHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  securityPinTitle: {
+    fontSize: 13,
+    fontWeight: fontWeight.bold,
+    color: colors.neutral[900],
+  },
+  securityPinSub: {
+    fontSize: fontSize.xs,
+    color: colors.neutral[500],
+    marginTop: 2,
+    textAlign: 'center',
+  },
+  securityPinDigits: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    marginTop: spacing.sm,
+  },
+  securityPinDigit: {
+    width: 44,
+    height: 52,
+    borderRadius: borderRadius.md,
+    borderWidth: 1.5,
+    borderColor: colors.primary[600],
+    backgroundColor: colors.white,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  securityPinDigitText: {
+    fontSize: fontSize['2xl'],
+    fontWeight: fontWeight.bold,
+    color: colors.primary[700],
+  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',

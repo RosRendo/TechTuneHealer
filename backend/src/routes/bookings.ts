@@ -227,6 +227,14 @@ router.post("/", authenticate, async (req: AuthRequest, res: Response) => {
         body: `You have a new booking request for ${serviceType}`,
       },
     });
+
+    // Real-time dispatch push to the provider's personal socket room
+    const dispatchEmit = (req.app.get("dispatchEmit") as
+      | ((userId: string, event: string, payload: unknown) => void)
+      | null);
+    if (dispatchEmit) {
+      dispatchEmit(provider.userId, "booking:dispatch", { booking });
+    }
   }
 
   res.status(201).json(booking);

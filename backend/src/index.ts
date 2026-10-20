@@ -38,8 +38,9 @@ const io = new Server(httpServer, {
   },
 });
 
-// Register WebSocket gateway
-registerLocationGateway(io);
+// Register WebSocket gateway (also exposes user-room dispatch emitter to routes)
+const { emitToUser } = registerLocationGateway(io);
+app.set("dispatchEmit", emitToUser);
 
 // Rate limiting (Relaxed in development/testing mode)
 const isDev = process.env.NODE_ENV !== "production";

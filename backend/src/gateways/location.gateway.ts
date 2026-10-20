@@ -15,12 +15,17 @@ import { prisma } from "../lib/prisma.js";
  *  Server → Client:
  *    "location:update"    { latitude, longitude, timestamp }   – broadcast to customer room
  *    "mechanic:arrived"   {}                                   – arrival ping to customer room
+ *    "booking:dispatch"   { booking }                          – new booking pushed to the provider's room
  *    "error"              { message }                          – auth / authorization failure
  *
  * Security: every connection must present a valid JWT (via `auth.token` handshake),
  * and every event is checked against the booking's real customer/provider membership.
  */
 export function registerLocationGateway(io: Server) {
+  // Helper for HTTP routes: emit to one authenticated user's personal room
+  function emitToUser(userId: string, event: string, payload: unknown) {
+    io.to(`user:${userId}`).emit(event, payload);
+  }
   // ── Handshake auth: require a valid JWT ──────────────────────────────────
   io.use((socket, next) => {
     const token = socket.handshake.auth?.token as string | undefined;
@@ -85,6 +90,9 @@ export function registerLocationGateway(io: Server) {
 
   io.on("connection", (socket: Socket) => {
     console.log(`📡 Socket connected: ${socket.id} (user ${socket.data.userId})`);
+
+    // ── Personal room: routes can push dispatches straight to this user ─────
+    socket.join(`user:${socket.data.userId}`);
 
     // ── Mechanic broadcasts live GPS ─────────────────────────────────────────
     socket.on(
@@ -190,4 +198,6 @@ export function registerLocationGateway(io: Server) {
       console.log(`❌ Socket disconnected: ${socket.id}`);
     });
   });
+
+  return { emitToUser };
 }

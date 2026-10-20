@@ -11,7 +11,10 @@ import {
   Image,
   Platform,
   Modal,
+  Vibration,
 } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { io } from "socket.io-client";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
@@ -46,6 +49,7 @@ import { AnimatedEntrance } from "../../components/AnimatedEntrance";
 import { LanguageToggle } from "../../components/LanguageToggle";
 import { AppLogo } from "../../components/AppLogo";
 import { SlideToConfirm } from "../../components/SlideToConfirm";
+import { WS_URL } from "../../config/api";
 import {
   getProviderAvatarUrl,
   getCustomerAvatarUrl,
@@ -113,24 +117,24 @@ const BookingItem: React.FC<BookingItemProps> = ({ booking, onPress, onAccept, o
           <Ionicons name="time-outline" size={12} color={colors.primary[600]} />
           <Text style={styles.cleanTimeChipText}>
             {booking.scheduledTime}
-            {" • "}
+            {" Ã¢â‚¬Â¢ "}
             {booking.status === "pending" ? "Upcoming" : "Today"}
           </Text>
         </View>
       )}
 
-      {/* 1 Ultra-Clean Subtitle Line: Service â€¢ Distance (KM) â€¢ Location */}
+      {/* 1 Ultra-Clean Subtitle Line: Service ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ Distance (KM) ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ Location */}
       <View style={styles.cleanVehicleRow}>
         <Ionicons name={serviceVisual.icon} size={13} color={colors.neutral[500]} />
         <Text style={styles.cleanServiceSubtitle}>{serviceVisual.label}</Text>
         {distanceText ? (
           <>
-            <Text style={styles.cleanDot}>â€¢</Text>
+            <Text style={styles.cleanDot}>ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢</Text>
             <Ionicons name="navigate" size={11} color={colors.primary[600]} />
             <Text style={styles.cleanDistanceText}>{distanceText}</Text>
           </>
         ) : null}
-        <Text style={styles.cleanDot}>â€¢</Text>
+        <Text style={styles.cleanDot}>ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢</Text>
         <Ionicons name="location-outline" size={12} color={colors.neutral[400]} />
         <Text style={styles.cleanMetaText} numberOfLines={1}>{conciseLocation}</Text>
       </View>
@@ -224,6 +228,70 @@ export default function DashboardScreen() {
   const [dispatchModalId, setDispatchModalId] = useState<string | null>(null);
   const [dispatchCountdown, setDispatchCountdown] = useState(30);
   const dispatchModalBooking = bookings.find((b) => b.id === dispatchModalId) || null;
+
+  // Seen-pending cache so a genuinely NEW dispatch (socket or refresh) pops the S18 modal
+  const seenPendingIdsRef = useRef<Set<string>>(new Set());
+
+  const notePendingBookings = React.useCallback(
+    (list: (Booking & { isEmergency?: boolean })[], dutyOnline: boolean) => {
+      const pending = list.filter((b) => b.status?.toLowerCase() === "pending");
+      const fresh = pending.filter((b) => !seenPendingIdsRef.current.has(b.id));
+      pending.forEach((b) => seenPendingIdsRef.current.add(b.id));
+      if (dutyOnline && fresh.length > 0) {
+        const emergencyOne =
+          fresh.find(
+            (b) =>
+              Boolean(b.isEmergency) ||
+              b.serviceType?.toLowerCase().includes("emergency") ||
+              b.serviceType?.toLowerCase().includes("roadside")
+          ) || fresh[0];
+        setDispatchCountdown(30);
+        setDispatchModalId(emergencyOne.id);
+      }
+    },
+    []
+  );
+
+  React.useEffect(() => {
+    if (!bookings) return;
+    notePendingBookings(bookings, isDutyOnline);
+  }, [bookings, isDutyOnline, notePendingBookings]);
+
+  // Real-time dispatch: socket push from backend + safety poll while mounted
+  const handleBookingDispatch = React.useCallback(
+    (_payload: unknown) => {
+      fetchBookings();
+      if (isDutyOnline) {
+        if (typeof Vibration !== "undefined") {
+          Vibration.vibrate([0, 120, 80, 120]);
+        }
+      }
+    },
+    [fetchBookings, isDutyOnline]
+  );
+
+  React.useEffect(() => {
+    let active = true;
+    let socket: ReturnType<typeof io> | null = null;
+    (async () => {
+      const token = (await AsyncStorage.getItem("authToken")) || "";
+      if (!active) return;
+      socket = io(WS_URL, { auth: { token } });
+      socket.on("booking:dispatch", handleBookingDispatch);
+      socket.on("connect_error", () => {});
+    })();
+
+    // Fallback poll every 20s (covers sockets being unavailable / dev modes)
+    const poll = setInterval(() => {
+      if (isDutyOnline) fetchBookings();
+    }, 20000);
+
+    return () => {
+      active = false;
+      clearInterval(poll);
+      socket?.disconnect();
+    };
+  }, [fetchBookings, isDutyOnline, handleBookingDispatch]);
 
   React.useEffect(() => {
     if (!dispatchModalId) return;
@@ -386,7 +454,7 @@ export default function DashboardScreen() {
   );
   const displayEarnings = monthlyRevenue > 0 ? `$${monthlyRevenue.toLocaleString()}` : "$1,250";
 
-  // â”€â”€â”€ FULL-SCREEN MAP RADAR (NO HEADER, EDGE-TO-EDGE) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ FULL-SCREEN MAP RADAR (NO HEADER, EDGE-TO-EDGE) ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
   if (viewMode === "map") {
     return (
       <View style={styles.fullScreenMapContainer}>
@@ -550,9 +618,9 @@ export default function DashboardScreen() {
             <View style={styles.radarCardDismissRow}>
               <Text style={styles.radarCardDismissLabel}>
                 {selectedMapBooking.status?.toLowerCase() === "accepted" || selectedMapBooking.status?.toLowerCase() === "in_progress"
-                  ? "ðŸš— Active Dispatch Â· En Route"
+                  ? "ÃƒÂ°Ã…Â¸Ã…Â¡Ã¢â‚¬â€ Active Dispatch Ãƒâ€šÃ‚Â· En Route"
                   : selectedMapBooking.isEmergency
-                    ? "ðŸš¨ Urgent Breakdown"
+                    ? "ÃƒÂ°Ã…Â¸Ã…Â¡Ã‚Â¨ Urgent Breakdown"
                     : "Scheduled Dispatch"}
               </Text>
               <TouchableOpacity
@@ -588,8 +656,8 @@ export default function DashboardScreen() {
               <View style={styles.activePillDotGreen} />
               <View style={{ flex: 1 }}>
                 <Text style={styles.activeDispatchPillTitle} numberOfLines={1}>
-                  {language === "km" ? "áž€áŸ†áž–áž»áž„áž’áŸ’ážœáž¾ážŠáŸ†ážŽáž¾ážš Â· " : "En Route Â· "}
-                  {activeDispatch.customerName || (language === "km" ? "áž¢ážáž·ážáž·áž‡áž“" : "Customer")}
+                  {language === "km" ? "ÃƒÂ¡Ã…Â¾Ã¢â€šÂ¬ÃƒÂ¡Ã…Â¸Ã¢â‚¬Â ÃƒÂ¡Ã…Â¾Ã¢â‚¬â€œÃƒÂ¡Ã…Â¾Ã‚Â»ÃƒÂ¡Ã…Â¾Ã¢â‚¬Å¾ÃƒÂ¡Ã…Â¾Ã¢â‚¬â„¢ÃƒÂ¡Ã…Â¸Ã¢â‚¬â„¢ÃƒÂ¡Ã…Â¾Ã…â€œÃƒÂ¡Ã…Â¾Ã‚Â¾ÃƒÂ¡Ã…Â¾Ã…Â ÃƒÂ¡Ã…Â¸Ã¢â‚¬Â ÃƒÂ¡Ã…Â¾Ã…Â½ÃƒÂ¡Ã…Â¾Ã‚Â¾ÃƒÂ¡Ã…Â¾Ã…Â¡ Ãƒâ€šÃ‚Â· " : "En Route Ãƒâ€šÃ‚Â· "}
+                  {activeDispatch.customerName || (language === "km" ? "ÃƒÂ¡Ã…Â¾Ã‚Â¢ÃƒÂ¡Ã…Â¾Ã‚ÂÃƒÂ¡Ã…Â¾Ã‚Â·ÃƒÂ¡Ã…Â¾Ã‚ÂÃƒÂ¡Ã…Â¾Ã‚Â·ÃƒÂ¡Ã…Â¾Ã¢â‚¬Â¡ÃƒÂ¡Ã…Â¾Ã¢â‚¬Å“" : "Customer")}
                 </Text>
                 <Text style={styles.activeDispatchPillSub} numberOfLines={1}>
                   {activeDispatch.serviceType}
@@ -599,7 +667,7 @@ export default function DashboardScreen() {
             <View style={styles.activeDispatchOpenBtn}>
               <Ionicons name="navigate" size={13} color={colors.white} />
               <Text style={styles.activeDispatchOpenText}>
-                {language === "km" ? "áž”áž¾áž€áž•áŸ’áž›áž¼ážœ" : "Open Route"}
+                {language === "km" ? "ÃƒÂ¡Ã…Â¾Ã¢â‚¬ÂÃƒÂ¡Ã…Â¾Ã‚Â¾ÃƒÂ¡Ã…Â¾Ã¢â€šÂ¬ÃƒÂ¡Ã…Â¾Ã¢â‚¬Â¢ÃƒÂ¡Ã…Â¸Ã¢â‚¬â„¢ÃƒÂ¡Ã…Â¾Ã¢â‚¬ÂºÃƒÂ¡Ã…Â¾Ã‚Â¼ÃƒÂ¡Ã…Â¾Ã…â€œ" : "Open Route"}
               </Text>
             </View>
           </TouchableOpacity>
@@ -609,8 +677,8 @@ export default function DashboardScreen() {
             <Text style={styles.floatingCounterText}>
               {radarBookings.filter((b) => b.status?.toLowerCase() === "pending").length}{" "}
               {language === "km"
-                ? "ážŸáŸ†ážŽáž¾áž€áŸ’áž“áž»áž„ážáŸ†áž”áž“áŸ‹ Â· áž…áž»áž…áž›áž¾áž˜áŸ’áž‡áž»áž›ážŠáž¾áž˜áŸ’áž”áž¸áž˜áž¾áž›"
-                : "incoming requests in range Â· Tap a pin"}
+                ? "ÃƒÂ¡Ã…Â¾Ã…Â¸ÃƒÂ¡Ã…Â¸Ã¢â‚¬Â ÃƒÂ¡Ã…Â¾Ã…Â½ÃƒÂ¡Ã…Â¾Ã‚Â¾ÃƒÂ¡Ã…Â¾Ã¢â€šÂ¬ÃƒÂ¡Ã…Â¸Ã¢â‚¬â„¢ÃƒÂ¡Ã…Â¾Ã¢â‚¬Å“ÃƒÂ¡Ã…Â¾Ã‚Â»ÃƒÂ¡Ã…Â¾Ã¢â‚¬Å¾ÃƒÂ¡Ã…Â¾Ã‚ÂÃƒÂ¡Ã…Â¸Ã¢â‚¬Â ÃƒÂ¡Ã…Â¾Ã¢â‚¬ÂÃƒÂ¡Ã…Â¾Ã¢â‚¬Å“ÃƒÂ¡Ã…Â¸Ã¢â‚¬Â¹ Ãƒâ€šÃ‚Â· ÃƒÂ¡Ã…Â¾Ã¢â‚¬Â¦ÃƒÂ¡Ã…Â¾Ã‚Â»ÃƒÂ¡Ã…Â¾Ã¢â‚¬Â¦ÃƒÂ¡Ã…Â¾Ã¢â‚¬ÂºÃƒÂ¡Ã…Â¾Ã‚Â¾ÃƒÂ¡Ã…Â¾Ã‹Å“ÃƒÂ¡Ã…Â¸Ã¢â‚¬â„¢ÃƒÂ¡Ã…Â¾Ã¢â‚¬Â¡ÃƒÂ¡Ã…Â¾Ã‚Â»ÃƒÂ¡Ã…Â¾Ã¢â‚¬ÂºÃƒÂ¡Ã…Â¾Ã…Â ÃƒÂ¡Ã…Â¾Ã‚Â¾ÃƒÂ¡Ã…Â¾Ã‹Å“ÃƒÂ¡Ã…Â¸Ã¢â‚¬â„¢ÃƒÂ¡Ã…Â¾Ã¢â‚¬ÂÃƒÂ¡Ã…Â¾Ã‚Â¸ÃƒÂ¡Ã…Â¾Ã‹Å“ÃƒÂ¡Ã…Â¾Ã‚Â¾ÃƒÂ¡Ã…Â¾Ã¢â‚¬Âº"
+                : "incoming requests in range Ãƒâ€šÃ‚Â· Tap a pin"}
             </Text>
           </View>
         )}
@@ -715,7 +783,7 @@ export default function DashboardScreen() {
             </TouchableOpacity>
           )}
 
-          {/* Today's Performance Metrics — 4 Grid Tiles (Batch 5 / Screen 17) */}
+          {/* Today's Performance Metrics Ã¢â‚¬â€ 4 Grid Tiles (Batch 5 / Screen 17) */}
           <View style={styles.metricGrid}>
             <View style={styles.metricTile}>
               <View style={[styles.metricIcon, { backgroundColor: colors.success[50] }]}>
@@ -753,7 +821,7 @@ export default function DashboardScreen() {
               <View style={[styles.metricIcon, { backgroundColor: colors.secondary[50] }]}>
                 <Ionicons name="star" size={14} color={colors.secondary[600]} />
               </View>
-              <Text style={styles.metricValue}>4.9 ★</Text>
+              <Text style={styles.metricValue}>4.9 Ã¢Ëœâ€¦</Text>
               <Text style={styles.metricSub}>
                 {bookings.filter((b) => b.status?.toLowerCase() === "completed").length || 12} reviews
               </Text>
@@ -785,8 +853,8 @@ export default function DashboardScreen() {
               />
               <Text style={[styles.compactChipText, isEmergencyOnCall && { color: colors.secondary[700], fontWeight: "700" }]}>
                 {isEmergencyOnCall
-                  ? (language === "km" ? "ážœáŸáž“áž™áž”áŸ‹ 24/7" : "24/7 Night Duty")
-                  : (language === "km" ? "áž˜áŸ‰áŸ„áž„áž’áž˜áŸ’áž˜ážáž¶" : "Normal Hours")}
+                  ? (language === "km" ? "ÃƒÂ¡Ã…Â¾Ã…â€œÃƒÂ¡Ã…Â¸Ã‚ÂÃƒÂ¡Ã…Â¾Ã¢â‚¬Å“ÃƒÂ¡Ã…Â¾Ã¢â€žÂ¢ÃƒÂ¡Ã…Â¾Ã¢â‚¬ÂÃƒÂ¡Ã…Â¸Ã¢â‚¬Â¹ 24/7" : "24/7 Night Duty")
+                  : (language === "km" ? "ÃƒÂ¡Ã…Â¾Ã‹Å“ÃƒÂ¡Ã…Â¸Ã¢â‚¬Â°ÃƒÂ¡Ã…Â¸Ã¢â‚¬Å¾ÃƒÂ¡Ã…Â¾Ã¢â‚¬Å¾ÃƒÂ¡Ã…Â¾Ã¢â‚¬â„¢ÃƒÂ¡Ã…Â¾Ã‹Å“ÃƒÂ¡Ã…Â¸Ã¢â‚¬â„¢ÃƒÂ¡Ã…Â¾Ã‹Å“ÃƒÂ¡Ã…Â¾Ã‚ÂÃƒÂ¡Ã…Â¾Ã‚Â¶" : "Normal Hours")}
               </Text>
             </TouchableOpacity>
           </View>
@@ -859,12 +927,12 @@ export default function DashboardScreen() {
                 </View>
                 <Text style={styles.emptyStateTitle}>
                   {language === "km"
-                    ? (activeFilter === "pending" ? "áž˜áž·áž“áž˜áž¶áž“áž€áž¶ážšáž„áž¶ážšážšáž„áŸ‹áž…áž¶áŸ†áž‘áŸ" : "áž˜áž·áž“áž˜áž¶áž“áž€áž¶ážšáž„áž¶ážšážáŸ’áž„áŸƒáž“áŸáŸ‡áž‘áŸ")
+                    ? (activeFilter === "pending" ? "ÃƒÂ¡Ã…Â¾Ã‹Å“ÃƒÂ¡Ã…Â¾Ã‚Â·ÃƒÂ¡Ã…Â¾Ã¢â‚¬Å“ÃƒÂ¡Ã…Â¾Ã‹Å“ÃƒÂ¡Ã…Â¾Ã‚Â¶ÃƒÂ¡Ã…Â¾Ã¢â‚¬Å“ÃƒÂ¡Ã…Â¾Ã¢â€šÂ¬ÃƒÂ¡Ã…Â¾Ã‚Â¶ÃƒÂ¡Ã…Â¾Ã…Â¡ÃƒÂ¡Ã…Â¾Ã¢â‚¬Å¾ÃƒÂ¡Ã…Â¾Ã‚Â¶ÃƒÂ¡Ã…Â¾Ã…Â¡ÃƒÂ¡Ã…Â¾Ã…Â¡ÃƒÂ¡Ã…Â¾Ã¢â‚¬Å¾ÃƒÂ¡Ã…Â¸Ã¢â‚¬Â¹ÃƒÂ¡Ã…Â¾Ã¢â‚¬Â¦ÃƒÂ¡Ã…Â¾Ã‚Â¶ÃƒÂ¡Ã…Â¸Ã¢â‚¬Â ÃƒÂ¡Ã…Â¾Ã¢â‚¬ËœÃƒÂ¡Ã…Â¸Ã‚Â" : "ÃƒÂ¡Ã…Â¾Ã‹Å“ÃƒÂ¡Ã…Â¾Ã‚Â·ÃƒÂ¡Ã…Â¾Ã¢â‚¬Å“ÃƒÂ¡Ã…Â¾Ã‹Å“ÃƒÂ¡Ã…Â¾Ã‚Â¶ÃƒÂ¡Ã…Â¾Ã¢â‚¬Å“ÃƒÂ¡Ã…Â¾Ã¢â€šÂ¬ÃƒÂ¡Ã…Â¾Ã‚Â¶ÃƒÂ¡Ã…Â¾Ã…Â¡ÃƒÂ¡Ã…Â¾Ã¢â‚¬Å¾ÃƒÂ¡Ã…Â¾Ã‚Â¶ÃƒÂ¡Ã…Â¾Ã…Â¡ÃƒÂ¡Ã…Â¾Ã‚ÂÃƒÂ¡Ã…Â¸Ã¢â‚¬â„¢ÃƒÂ¡Ã…Â¾Ã¢â‚¬Å¾ÃƒÂ¡Ã…Â¸Ã†â€™ÃƒÂ¡Ã…Â¾Ã¢â‚¬Å“ÃƒÂ¡Ã…Â¸Ã‚ÂÃƒÂ¡Ã…Â¸Ã¢â‚¬Â¡ÃƒÂ¡Ã…Â¾Ã¢â‚¬ËœÃƒÂ¡Ã…Â¸Ã‚Â")
                     : `No ${activeFilter} jobs`}
                 </Text>
                 <Text style={styles.emptyStateSubtitle}>
                   {language === "km"
-                    ? "áž¢áŸ’áž“áž€áž”áž¶áž“áž–áž·áž“áž·ážáŸ’áž™ážšáž½áž…ážšáž¶áž›áŸ‹áž áž¾áž™! ážŸáž¼áž˜áž”áŸ’ážšáž¶áž€ážŠážáž¶áž”áž¶áž“áž”áž¾áž€áž‘áž‘áž½áž›áž€áž¶ážšáž„áž¶ážš ážŠáž¾áž˜áŸ’áž”áž¸áž‘áž‘áž½áž›áž”áž¶áž“áž€áž¶ážšáž‡áž¼áž“ážŠáŸ†ážŽáž¹áž„ážŸáž„áŸ’áž‚áŸ’ážšáŸ„áŸ‡áž”áž“áŸ’áž‘áž¶áž“áŸ‹áŸ”"
+                    ? "ÃƒÂ¡Ã…Â¾Ã‚Â¢ÃƒÂ¡Ã…Â¸Ã¢â‚¬â„¢ÃƒÂ¡Ã…Â¾Ã¢â‚¬Å“ÃƒÂ¡Ã…Â¾Ã¢â€šÂ¬ÃƒÂ¡Ã…Â¾Ã¢â‚¬ÂÃƒÂ¡Ã…Â¾Ã‚Â¶ÃƒÂ¡Ã…Â¾Ã¢â‚¬Å“ÃƒÂ¡Ã…Â¾Ã¢â‚¬â€œÃƒÂ¡Ã…Â¾Ã‚Â·ÃƒÂ¡Ã…Â¾Ã¢â‚¬Å“ÃƒÂ¡Ã…Â¾Ã‚Â·ÃƒÂ¡Ã…Â¾Ã‚ÂÃƒÂ¡Ã…Â¸Ã¢â‚¬â„¢ÃƒÂ¡Ã…Â¾Ã¢â€žÂ¢ÃƒÂ¡Ã…Â¾Ã…Â¡ÃƒÂ¡Ã…Â¾Ã‚Â½ÃƒÂ¡Ã…Â¾Ã¢â‚¬Â¦ÃƒÂ¡Ã…Â¾Ã…Â¡ÃƒÂ¡Ã…Â¾Ã‚Â¶ÃƒÂ¡Ã…Â¾Ã¢â‚¬ÂºÃƒÂ¡Ã…Â¸Ã¢â‚¬Â¹ÃƒÂ¡Ã…Â¾Ã‚Â ÃƒÂ¡Ã…Â¾Ã‚Â¾ÃƒÂ¡Ã…Â¾Ã¢â€žÂ¢! ÃƒÂ¡Ã…Â¾Ã…Â¸ÃƒÂ¡Ã…Â¾Ã‚Â¼ÃƒÂ¡Ã…Â¾Ã‹Å“ÃƒÂ¡Ã…Â¾Ã¢â‚¬ÂÃƒÂ¡Ã…Â¸Ã¢â‚¬â„¢ÃƒÂ¡Ã…Â¾Ã…Â¡ÃƒÂ¡Ã…Â¾Ã‚Â¶ÃƒÂ¡Ã…Â¾Ã¢â€šÂ¬ÃƒÂ¡Ã…Â¾Ã…Â ÃƒÂ¡Ã…Â¾Ã‚ÂÃƒÂ¡Ã…Â¾Ã‚Â¶ÃƒÂ¡Ã…Â¾Ã¢â‚¬ÂÃƒÂ¡Ã…Â¾Ã‚Â¶ÃƒÂ¡Ã…Â¾Ã¢â‚¬Å“ÃƒÂ¡Ã…Â¾Ã¢â‚¬ÂÃƒÂ¡Ã…Â¾Ã‚Â¾ÃƒÂ¡Ã…Â¾Ã¢â€šÂ¬ÃƒÂ¡Ã…Â¾Ã¢â‚¬ËœÃƒÂ¡Ã…Â¾Ã¢â‚¬ËœÃƒÂ¡Ã…Â¾Ã‚Â½ÃƒÂ¡Ã…Â¾Ã¢â‚¬ÂºÃƒÂ¡Ã…Â¾Ã¢â€šÂ¬ÃƒÂ¡Ã…Â¾Ã‚Â¶ÃƒÂ¡Ã…Â¾Ã…Â¡ÃƒÂ¡Ã…Â¾Ã¢â‚¬Å¾ÃƒÂ¡Ã…Â¾Ã‚Â¶ÃƒÂ¡Ã…Â¾Ã…Â¡ ÃƒÂ¡Ã…Â¾Ã…Â ÃƒÂ¡Ã…Â¾Ã‚Â¾ÃƒÂ¡Ã…Â¾Ã‹Å“ÃƒÂ¡Ã…Â¸Ã¢â‚¬â„¢ÃƒÂ¡Ã…Â¾Ã¢â‚¬ÂÃƒÂ¡Ã…Â¾Ã‚Â¸ÃƒÂ¡Ã…Â¾Ã¢â‚¬ËœÃƒÂ¡Ã…Â¾Ã¢â‚¬ËœÃƒÂ¡Ã…Â¾Ã‚Â½ÃƒÂ¡Ã…Â¾Ã¢â‚¬ÂºÃƒÂ¡Ã…Â¾Ã¢â‚¬ÂÃƒÂ¡Ã…Â¾Ã‚Â¶ÃƒÂ¡Ã…Â¾Ã¢â‚¬Å“ÃƒÂ¡Ã…Â¾Ã¢â€šÂ¬ÃƒÂ¡Ã…Â¾Ã‚Â¶ÃƒÂ¡Ã…Â¾Ã…Â¡ÃƒÂ¡Ã…Â¾Ã¢â‚¬Â¡ÃƒÂ¡Ã…Â¾Ã‚Â¼ÃƒÂ¡Ã…Â¾Ã¢â‚¬Å“ÃƒÂ¡Ã…Â¾Ã…Â ÃƒÂ¡Ã…Â¸Ã¢â‚¬Â ÃƒÂ¡Ã…Â¾Ã…Â½ÃƒÂ¡Ã…Â¾Ã‚Â¹ÃƒÂ¡Ã…Â¾Ã¢â‚¬Å¾ÃƒÂ¡Ã…Â¾Ã…Â¸ÃƒÂ¡Ã…Â¾Ã¢â‚¬Å¾ÃƒÂ¡Ã…Â¸Ã¢â‚¬â„¢ÃƒÂ¡Ã…Â¾Ã¢â‚¬Å¡ÃƒÂ¡Ã…Â¸Ã¢â‚¬â„¢ÃƒÂ¡Ã…Â¾Ã…Â¡ÃƒÂ¡Ã…Â¸Ã¢â‚¬Å¾ÃƒÂ¡Ã…Â¸Ã¢â‚¬Â¡ÃƒÂ¡Ã…Â¾Ã¢â‚¬ÂÃƒÂ¡Ã…Â¾Ã¢â‚¬Å“ÃƒÂ¡Ã…Â¸Ã¢â‚¬â„¢ÃƒÂ¡Ã…Â¾Ã¢â‚¬ËœÃƒÂ¡Ã…Â¾Ã‚Â¶ÃƒÂ¡Ã…Â¾Ã¢â‚¬Å“ÃƒÂ¡Ã…Â¸Ã¢â‚¬Â¹ÃƒÂ¡Ã…Â¸Ã¢â‚¬Â"
                     : "You are all caught up! Make sure you are Online to receive emergency alerts."}
                 </Text>
               </View>
@@ -902,13 +970,13 @@ export default function DashboardScreen() {
             <View style={styles.dispatchUrgencyRow}>
               <View style={styles.countdownRing}>
                 <Text style={styles.countdownText}>
-                  {dispatchModalBooking?.isEmergency ? `00:${String(dispatchCountdown).padStart(2, "0")}` : "—"}
+                  {dispatchModalBooking?.isEmergency ? `00:${String(dispatchCountdown).padStart(2, "0")}` : "Ã¢â‚¬â€"}
                 </Text>
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.dispatchModalTitle}>Urgent Roadside Dispatch Request</Text>
                 <Text style={styles.dispatchModalSubtitle}>
-                  Disposable response window — passes to the next unit on expiry
+                  Disposable response window Ã¢â‚¬â€ passes to the next unit on expiry
                 </Text>
               </View>
             </View>
@@ -1186,7 +1254,7 @@ const styles = StyleSheet.create({
     color: colors.primary[700],
   },
 
-  // Today's Performance Metrics — 4 grid tiles (Batch 5 Screen 17)
+  // Today's Performance Metrics Ã¢â‚¬â€ 4 grid tiles (Batch 5 Screen 17)
   metricGrid: {
     flexDirection: "row",
     flexWrap: "wrap",

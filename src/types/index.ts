@@ -112,6 +112,7 @@ export interface Booking {
   serviceType?: string;
   scheduledTime?: string;
   estimatedCost?: number;
+  securityPin?: string;
 }
 
 // Review Types
