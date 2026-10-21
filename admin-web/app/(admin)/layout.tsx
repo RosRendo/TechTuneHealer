@@ -21,7 +21,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     api
       .get("/auth/profile")
       .then((res) => {
-        if (res.data?.role !== "ADMIN") {
+        if (res.data?.role?.toUpperCase() !== "ADMIN") {
           localStorage.removeItem("admin_token");
           localStorage.removeItem("admin_user");
           router.push("/admin/login");
