@@ -353,12 +353,12 @@ export default function EditorialLandingPage() {
             <button
               type="button"
               onClick={() => setIsAiModalOpen(true)}
-              className="px-3 py-1.5 bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-700 text-xs font-bold tracking-wider uppercase transition cursor-pointer flex items-center gap-1.5 rounded-sm"
+              className="px-3 py-1.5 bg-[#EEF3FE] hover:bg-[#DCE6FD] border border-[#B9CBFA] text-[#1F51D6] text-xs font-bold tracking-wider uppercase transition cursor-pointer flex items-center gap-1.5 rounded-sm"
               title="Open AI Vehicle Scanner / បើកម៉ាស៊ីនស្កេន AI"
             >
               <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75" />
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-600" />
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#7B96F8] opacity-75" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-[#2A65F0]" />
               </span>
               <span>{t.navAiScan}</span>
             </button>
@@ -370,11 +370,11 @@ export default function EditorialLandingPage() {
               className="px-2.5 py-1 text-xs font-mono font-bold tracking-wider rounded-sm border border-slate-300 hover:border-slate-950 transition flex items-center gap-1 cursor-pointer bg-white text-slate-800"
               title="Switch language / ប្តូរភាសា"
             >
-              <span className={lang === "en" ? "text-blue-600 font-extrabold" : "text-slate-400"}>
+              <span className={lang === "en" ? "text-[#2A65F0] font-extrabold" : "text-slate-400"}>
                 EN
               </span>
               <span className="text-slate-300">/</span>
-              <span className={lang === "km" ? "text-blue-600 font-extrabold" : "text-slate-400"}>
+              <span className={lang === "km" ? "text-[#2A65F0] font-extrabold" : "text-slate-400"}>
                 ខ្មែរ
               </span>
             </button>
@@ -420,7 +420,7 @@ export default function EditorialLandingPage() {
                 <button
                   type="button"
                   onClick={() => setIsAiModalOpen(true)}
-                  className="group px-7 py-4 bg-blue-600 text-white text-xs font-black tracking-wider uppercase hover:bg-blue-700 active:scale-[0.98] transition-all inline-flex items-center gap-3 cursor-pointer shadow-sm"
+                  className="group px-7 py-4 bg-[#2A65F0] text-white text-xs font-black tracking-wider uppercase hover:bg-[#1F51D6] active:scale-[0.98] transition-all inline-flex items-center gap-3 cursor-pointer shadow-sm"
                 >
                   <span className="relative flex h-2.5 w-2.5">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75" />
@@ -609,7 +609,7 @@ export default function EditorialLandingPage() {
                 <span className="text-xs font-mono font-bold uppercase tracking-widest text-slate-400">
                   {t.step1Stage}
                 </span>
-                <h3 className="text-xl font-bold text-slate-950 uppercase tracking-tight group-hover:text-blue-600 transition-colors">
+                <h3 className="text-xl font-bold text-slate-950 uppercase tracking-tight group-hover:text-[#2A65F0] transition-colors">
                   {t.step1Title}
                 </h3>
                 <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
@@ -624,7 +624,7 @@ export default function EditorialLandingPage() {
                 <span className="text-xs font-mono font-bold uppercase tracking-widest text-slate-400">
                   {t.step2Stage}
                 </span>
-                <h3 className="text-xl font-bold text-slate-950 uppercase tracking-tight group-hover:text-blue-600 transition-colors">
+                <h3 className="text-xl font-bold text-slate-950 uppercase tracking-tight group-hover:text-[#2A65F0] transition-colors">
                   {t.step2Title}
                 </h3>
                 <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
@@ -639,7 +639,7 @@ export default function EditorialLandingPage() {
                 <span className="text-xs font-mono font-bold uppercase tracking-widest text-slate-400">
                   {t.step3Stage}
                 </span>
-                <h3 className="text-xl font-bold text-slate-950 uppercase tracking-tight group-hover:text-blue-600 transition-colors">
+                <h3 className="text-xl font-bold text-slate-950 uppercase tracking-tight group-hover:text-[#2A65F0] transition-colors">
                   {t.step3Title}
                 </h3>
                 <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
@@ -706,7 +706,7 @@ export default function EditorialLandingPage() {
               {/* Centered Phone Frame with Gentle Ambient Floating Motion */}
               <div className="lg:col-span-4 flex justify-center order-1 lg:order-2">
                 <Reveal delay={150} direction="up" className="relative flex justify-center w-full">
-                  <div className="absolute inset-0 bg-blue-500/10 blur-3xl rounded-full -z-10 animate-pulse-glow pointer-events-none" />
+                  <div className="absolute inset-0 bg-[#EEF3FE]0/10 blur-3xl rounded-full -z-10 animate-pulse-glow pointer-events-none" />
 
                   <div className="relative w-[280px] sm:w-[320px] bg-slate-950 rounded-[48px] p-3 shadow-2xl border-4 border-slate-800 animate-float-slow hover:-translate-y-2 transition-transform duration-500 cursor-pointer">
                     <div className="rounded-[38px] overflow-hidden bg-white">
@@ -725,11 +725,11 @@ export default function EditorialLandingPage() {
                 <Reveal delay={250} direction="left">
                   <div
                     onClick={() => setIsAiModalOpen(true)}
-                    className="group space-y-2 p-3 -m-3 rounded-lg hover:bg-blue-50/70 transition-colors cursor-pointer"
+                    className="group space-y-2 p-3 -m-3 rounded-lg hover:bg-[#EEF3FE]/70 transition-colors cursor-pointer"
                   >
                     <div className="flex items-center gap-3">
-                      <span className="w-2 h-2 rounded-full bg-blue-600 transition-transform duration-300 group-hover:scale-125" />
-                      <h4 className="text-sm font-black uppercase tracking-wider text-blue-600 flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-[#2A65F0] transition-transform duration-300 group-hover:scale-125" />
+                      <h4 className="text-sm font-black uppercase tracking-wider text-[#2A65F0] flex items-center gap-1.5">
                         <span>{t.driverObdTitle}</span>
                         <span className="text-[10px]">&rarr;</span>
                       </h4>
@@ -815,13 +815,13 @@ export default function EditorialLandingPage() {
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
                     />
                     <div className="absolute inset-0 bg-slate-950/30 group-hover:bg-slate-950/10 transition-colors flex items-center justify-center">
-                      <span className="px-3.5 py-2 bg-blue-600/90 backdrop-blur-xs text-white text-[11px] font-mono font-bold uppercase tracking-wider shadow-sm opacity-90 group-hover:opacity-100 group-hover:scale-105 transition">
+                      <span className="px-3.5 py-2 bg-[#2A65F0]/90 backdrop-blur-xs text-white text-[11px] font-mono font-bold uppercase tracking-wider shadow-sm opacity-90 group-hover:opacity-100 group-hover:scale-105 transition">
                         {lang === "km" ? "បើកម៉ាស៊ីនស្កេន AI ឥឡូវនេះ" : "Launch AI Scanner"} &rarr;
                       </span>
                     </div>
                   </div>
                   <div className="flex items-baseline justify-between pt-2 border-t border-slate-800">
-                    <span className="text-sm font-bold uppercase tracking-wider text-white group-hover:text-blue-400 transition-colors">
+                    <span className="text-sm font-bold uppercase tracking-wider text-white group-hover:text-[#7B96F8] transition-colors">
                       {t.ops2Title}
                     </span>
                     <span className="text-xs font-mono text-slate-400">{t.ops2Badge}</span>
@@ -1183,7 +1183,7 @@ export default function EditorialLandingPage() {
               <button
                 type="button"
                 onClick={() => setIsAiModalOpen(true)}
-                className="hover:text-blue-600 transition cursor-pointer text-blue-600 font-bold"
+                className="hover:text-[#2A65F0] transition cursor-pointer text-[#2A65F0] font-bold"
               >
                 {t.navAiScan}
               </button>

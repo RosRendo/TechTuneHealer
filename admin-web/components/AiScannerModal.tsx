@@ -384,7 +384,7 @@ export function AiScannerModal({ isOpen, onClose, lang, onOpenAuth }: AiScannerM
         {/* Header */}
         <div className="bg-slate-950 text-white px-6 py-4 flex items-center justify-between border-b border-slate-800">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-sm bg-blue-600 flex items-center justify-center text-white shadow-sm font-mono text-sm font-bold">
+            <div className="w-8 h-8 rounded-sm bg-[#2A65F0] flex items-center justify-center text-white shadow-sm font-mono text-sm font-bold">
               AI
             </div>
             <div>
@@ -426,7 +426,7 @@ export function AiScannerModal({ isOpen, onClose, lang, onOpenAuth }: AiScannerM
                 : "text-slate-500 hover:text-slate-900 hover:bg-slate-100"
             }`}
           >
-            <span className="w-2 h-2 rounded-full bg-blue-600" />
+            <span className="w-2 h-2 rounded-full bg-[#2A65F0]" />
             <span>{t.aiTabPresets}</span>
           </button>
 
@@ -481,7 +481,7 @@ export function AiScannerModal({ isOpen, onClose, lang, onOpenAuth }: AiScannerM
                         <div className="flex items-center justify-between">
                           <span
                             className={`text-[9px] font-mono font-bold ${
-                              isSelected ? "text-blue-400" : "text-slate-400"
+                              isSelected ? "text-[#7B96F8]" : "text-slate-400"
                             }`}
                           >
                             {preset.dtc}
@@ -534,7 +534,7 @@ export function AiScannerModal({ isOpen, onClose, lang, onOpenAuth }: AiScannerM
                     <p className="text-xs font-mono text-slate-700 truncate">
                       {customFileName} &bull; Ready for AI Telemetry
                     </p>
-                    <span className="text-[11px] font-bold uppercase tracking-wider text-blue-600 block">
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-[#2A65F0] block">
                       Click to switch photo
                     </span>
                   </div>
@@ -588,7 +588,7 @@ export function AiScannerModal({ isOpen, onClose, lang, onOpenAuth }: AiScannerM
                 </>
               ) : (
                 <>
-                  <svg className="w-4 h-4 text-blue-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <svg className="w-4 h-4 text-[#7B96F8]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
                   </svg>
                   <span>{t.aiRunDiagnosticBtn}</span>
@@ -599,12 +599,12 @@ export function AiScannerModal({ isOpen, onClose, lang, onOpenAuth }: AiScannerM
 
           {/* Animated Scanning HUD Overlay during scan */}
           {isScanning && (
-            <div className="p-8 border border-blue-500/40 bg-slate-950 text-white relative overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-b from-blue-500/10 via-transparent to-blue-500/10 pointer-events-none" />
+            <div className="p-8 border border-[#4E77F6]/40 bg-slate-950 text-white relative overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-b from-[#4E77F6]/10 via-transparent to-[#4E77F6]/10 pointer-events-none" />
               <div className="space-y-4 relative z-10 text-center max-w-md mx-auto">
                 <div className="relative w-20 h-20 mx-auto flex items-center justify-center">
-                  <div className="absolute inset-0 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
-                  <div className="w-12 h-12 rounded-full bg-blue-600/30 flex items-center justify-center text-xs font-mono font-bold text-blue-300">
+                  <div className="absolute inset-0 border-2 border-[#4E77F6] border-t-transparent rounded-full animate-spin" />
+                  <div className="w-12 h-12 rounded-full bg-[#2A65F0]/30 flex items-center justify-center text-xs font-mono font-bold text-[#A5BAFB]">
                     {scanProgress}%
                   </div>
                 </div>
@@ -621,7 +621,7 @@ export function AiScannerModal({ isOpen, onClose, lang, onOpenAuth }: AiScannerM
                 {/* Progress bar */}
                 <div className="w-full bg-slate-800 h-1.5 overflow-hidden rounded-full">
                   <div
-                    className="bg-blue-500 h-full transition-all duration-200"
+                    className="bg-[#EEF3FE]0 h-full transition-all duration-200"
                     style={{ width: `${scanProgress}%` }}
                   />
                 </div>
@@ -640,7 +640,7 @@ export function AiScannerModal({ isOpen, onClose, lang, onOpenAuth }: AiScannerM
                       {t.aiReportTitle}
                     </span>
                     <span className="text-slate-300">&bull;</span>
-                    <span className="text-[10px] font-mono font-bold uppercase text-blue-600">
+                    <span className="text-[10px] font-mono font-bold uppercase text-[#2A65F0]">
                       {currentDisplay.badge[lang]}
                     </span>
                   </div>
@@ -757,9 +757,9 @@ export function AiScannerModal({ isOpen, onClose, lang, onOpenAuth }: AiScannerM
                   </div>
 
                   {/* Nearest Phnom Penh Service Bay */}
-                  <div className="p-3.5 bg-blue-50/60 border border-blue-200 flex items-center justify-between gap-3">
+                  <div className="p-3.5 bg-[#EEF3FE]/60 border border-[#B9CBFA] flex items-center justify-between gap-3">
                     <div>
-                      <span className="text-[10px] font-mono font-bold uppercase text-blue-700 block">
+                      <span className="text-[10px] font-mono font-bold uppercase text-[#1F51D6] block">
                         {t.aiNearestBayLabel}
                       </span>
                       <p className="text-xs font-bold text-slate-950 mt-0.5">
@@ -770,7 +770,7 @@ export function AiScannerModal({ isOpen, onClose, lang, onOpenAuth }: AiScannerM
                       <span className="text-[10px] font-mono text-slate-500 uppercase block">
                         {lang === "km" ? "មកដល់ក្នុងរង្វង់" : "Arrival ETA"}
                       </span>
-                      <p className="text-xs font-mono font-bold text-blue-700">
+                      <p className="text-xs font-mono font-bold text-[#1F51D6]">
                         &lt; {currentDisplay.eta}
                       </p>
                     </div>
@@ -803,7 +803,7 @@ export function AiScannerModal({ isOpen, onClose, lang, onOpenAuth }: AiScannerM
                   <button
                     type="button"
                     onClick={handleDispatch}
-                    className="flex-1 sm:flex-initial px-6 py-2.5 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white text-xs font-black uppercase tracking-wider transition cursor-pointer shadow-sm flex items-center justify-center gap-2"
+                    className="flex-1 sm:flex-initial px-6 py-2.5 bg-[#2A65F0] hover:bg-[#1F51D6] active:scale-95 text-white text-xs font-black uppercase tracking-wider transition cursor-pointer shadow-sm flex items-center justify-center gap-2"
                   >
                     <span>{t.aiBtnDispatch}</span>
                     <span aria-hidden="true">&rarr;</span>
@@ -838,9 +838,9 @@ export function AiScannerModal({ isOpen, onClose, lang, onOpenAuth }: AiScannerM
               )}
 
               {dispatchStatus === "booked" && (
-                <div className="p-4 bg-blue-50 border border-blue-300 text-blue-900 text-xs font-medium space-y-1">
+                <div className="p-4 bg-[#EEF3FE] border border-[#94ADF8] text-[#172554] text-xs font-medium space-y-1">
                   <div className="flex items-center gap-2 font-bold uppercase tracking-wide">
-                    <svg className="w-4 h-4 text-blue-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <svg className="w-4 h-4 text-[#2A65F0]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
                       <polyline points="22 4 12 14.01 9 11.01" />
                     </svg>
