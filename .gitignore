@@ -12,6 +12,8 @@ build/
 Thumbs.db
 /generated/
 .turbo/
+.next/
+.claude/
 
 # Backend runtime artifacts
 backend/uploads/
