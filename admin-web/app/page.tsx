@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Reveal, Counter } from "@/components/Reveal";
 import { translations, type Language } from "@/lib/i18n";
 import { AiScannerModal } from "@/components/AiScannerModal";
+import { APP_STORE_URL, PLAY_STORE_URL } from "@/lib/appLinks";
 
 // Technical OEM Parts Catalog Data with Bilingual Details
 const OEM_PARTS = [
@@ -416,7 +417,44 @@ export default function EditorialLandingPage() {
 
             <Reveal direction="up" delay={150}>
               <div className="mt-8 flex flex-wrap items-center gap-4">
-                {/* AI Scanner CTA Button */}
+                {/* PRIMARY: store download badges (the conversion outcome) */}
+                {APP_STORE_URL && (
+                  <a
+                    href={APP_STORE_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="group inline-flex items-center gap-3 px-5 py-3.5 bg-slate-950 text-white rounded-lg hover:bg-slate-800 active:scale-[0.98] transition-all cursor-pointer border border-slate-950"
+                  >
+                    <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                      <path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8.83-.16 1.94-.8 3.24-.71 1.47.12 2.58.7 3.29 1.75-2.94 1.79-2.47 5.68.45 6.86-.6 1.5-1.37 2.99-2.06 3.27zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z" />
+                    </svg>
+                    <span className="flex flex-col items-start leading-none">
+                      <span className="text-[9px] font-medium tracking-wide opacity-70">{t.heroIosBadge}</span>
+                      <span className="text-base font-bold tracking-tight mt-0.5">{t.heroIosBadgeLabel}</span>
+                    </span>
+                  </a>
+                )}
+                {PLAY_STORE_URL && (
+                  <a
+                    href={PLAY_STORE_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="group inline-flex items-center gap-3 px-5 py-3.5 bg-slate-950 text-white rounded-lg hover:bg-slate-800 active:scale-[0.98] transition-all cursor-pointer border border-slate-950"
+                  >
+                    <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                      <path d="M3.6 2.28c-.37.4-.6.98-.6 1.69v16.06c0 .71.23 1.29.6 1.67l9.75-9.7L3.6 2.28z" />
+                      <path d="M16.68 8.44l-2.9 2.89-9.85-9.6c.2-.15.45-.22.73-.22.31 0 .65.09 1 .28l11.02 6.65z" />
+                      <path d="M20.16 11.29c.95.57 1.57 1.36 1.41 2.26-.16.9-1 1.44-1.94 1.97l-2.5 1.51-3.06-3.03 3.06-3.02 3.03 1.31z" style={{ opacity: 0.85 }} />
+                      <path d="M3.93 21.99c-.5-.13-.3-.32 0 0zm9.85-10.67l2.9 2.89-11.05 6.28c-.91.51-1.62.76-2.03.62L13.78 11.3z" style={{ opacity: 0.6 }} />
+                    </svg>
+                    <span className="flex flex-col items-start leading-none">
+                      <span className="text-[9px] font-medium tracking-wide opacity-70">{t.heroAndroidBadge}</span>
+                      <span className="text-base font-bold tracking-tight mt-0.5">{t.heroAndroidBadgeLabel}</span>
+                    </span>
+                  </a>
+                )}
+
+                {/* AI Scanner CTA (differentiator) */}
                 <button
                   type="button"
                   onClick={() => setIsAiModalOpen(true)}
@@ -430,20 +468,30 @@ export default function EditorialLandingPage() {
                   <span className="inline-block transition-transform duration-300 group-hover:translate-x-1" aria-hidden="true">&rarr;</span>
                 </button>
 
-                <a
-                  href="#driver"
-                  className="group px-8 py-4 bg-slate-950 text-white text-xs font-bold tracking-wider uppercase hover:bg-slate-800 active:scale-[0.98] transition-all inline-flex items-center gap-3 cursor-pointer"
-                >
-                  <span>{t.heroCtaDriver}</span>
-                  <span className="inline-block transition-transform duration-300 group-hover:translate-y-0.5" aria-hidden="true">&darr;</span>
-                </a>
-
+                {/* Partner onboarding moves down the funnel */}
                 <button
                   onClick={() => openAuth("register")}
-                  className="px-8 py-4 bg-transparent border border-slate-300 text-slate-950 text-xs font-bold tracking-wider uppercase hover:border-slate-950 active:scale-[0.98] transition-all cursor-pointer"
+                  className="px-6 py-4 bg-transparent border border-slate-300 text-slate-700 text-xs font-bold tracking-wider uppercase hover:border-slate-950 hover:text-slate-950 active:scale-[0.98] transition-all cursor-pointer"
                 >
                   {t.heroCtaPartner}
                 </button>
+
+                {/* QR code for quick install (points at the real store URL) */}
+                {(APP_STORE_URL || PLAY_STORE_URL) && (
+                  <div className="hidden sm:flex items-center gap-3 pl-2">
+                    <img
+                      src={`https://api.qrserver.com/v1/create-qr-code/?size=96x96&data=${encodeURIComponent(PLAY_STORE_URL || APP_STORE_URL)}`}
+                      alt={t.heroScanLabel}
+                      width={64}
+                      height={64}
+                      className="w-16 h-16 border border-slate-200 rounded-md bg-white p-1"
+                    />
+                    <span className="flex flex-col leading-tight">
+                      <span className="text-[10px] font-mono font-bold tracking-widest text-slate-950">{t.heroScanLabel}</span>
+                      <span className="text-[11px] text-slate-500">{t.heroScanSub}</span>
+                    </span>
+                  </div>
+                )}
               </div>
             </Reveal>
           </div>
@@ -1119,6 +1167,78 @@ export default function EditorialLandingPage() {
                 {t.trustCard4Desc}
               </p>
             </Reveal>
+          </div>
+        </div>
+      </section>
+
+      {/* ─── 09b. SOCIAL PROOF: DRIVER TESTIMONIALS + MILESTONE COUNTERS ────── */}
+      <section id="testimonials" className="py-24 sm:py-32 px-6 sm:px-12 bg-[#FBFBFB] border-b border-slate-100">
+        <div className="max-w-7xl mx-auto space-y-16">
+          <Reveal direction="up">
+            <div className="max-w-3xl">
+              <p className="text-xs font-mono font-semibold uppercase tracking-widest text-slate-400">
+                {t.testEyebrow}
+              </p>
+              <h2 className="text-3xl sm:text-5xl font-black text-slate-950 tracking-tight leading-[1.05] uppercase mt-3">
+                {t.testTitle}
+              </h2>
+              <p className="text-slate-600 text-base mt-4 leading-relaxed">
+                {t.testSubtitle}
+              </p>
+            </div>
+          </Reveal>
+
+          {/* Milestone counters — swap values when real metrics are available */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-12 pt-10 border-t border-slate-200">
+            <Reveal delay={0} direction="up" className="group">
+              <span className="text-5xl sm:text-6xl font-black font-mono text-slate-950 block">
+                <Counter end={12000} suffix="+" />
+              </span>
+              <h4 className="text-xs font-bold uppercase tracking-wider text-slate-950 mt-2">
+                {t.statUsersLabel}
+              </h4>
+              <p className="text-xs text-slate-500 mt-1">and growing each week</p>
+            </Reveal>
+            <Reveal delay={100} direction="up" className="group">
+              <span className="text-5xl sm:text-6xl font-black font-mono text-slate-950 block">
+                <Counter end={4800} suffix="+" />
+              </span>
+              <h4 className="text-xs font-bold uppercase tracking-wider text-slate-950 mt-2">
+                {t.statRescuesLabel}
+              </h4>
+              <p className="text-xs text-slate-500 mt-1">batteries, tires, tows &amp; full repairs</p>
+            </Reveal>
+            <Reveal delay={200} direction="up" className="group">
+              <span className="text-5xl sm:text-6xl font-black font-mono text-[#2A65F0] block">
+                <Counter end={4.9} decimals={1} suffix=" / 5" />
+              </span>
+              <h4 className="text-xs font-bold uppercase tracking-wider text-slate-950 mt-2">
+                {t.statRatingLabel}
+              </h4>
+              <p className="text-xs text-slate-500 mt-1">across both mobile stores</p>
+            </Reveal>
+          </div>
+
+          {/* Testimonial quotes — editorial style, no card boxes */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-12 lg:gap-16">
+            {[
+              { quote: t.test1Quote, name: t.test1Name, role: t.test1Role, delay: 0 },
+              { quote: t.test2Quote, name: t.test2Name, role: t.test2Role, delay: 150 },
+              { quote: t.test3Quote, name: t.test3Name, role: t.test3Role, delay: 300 },
+            ].map((item, i) => (
+              <Reveal key={i} delay={item.delay} direction="up" className="md:border-l md:border-slate-200 md:pl-8">
+                <div className="space-y-5">
+                  <span className="text-5xl font-black font-mono text-slate-300 leading-none" aria-hidden="true">
+                    &ldquo;
+                  </span>
+                  <p className="text-sm text-slate-800 leading-relaxed -mt-4">{item.quote}</p>
+                  <div className="border-t border-slate-200 pt-4">
+                    <p className="text-xs font-bold uppercase tracking-wider text-slate-950">{item.name}</p>
+                    <p className="text-[11px] text-slate-500 mt-0.5">{item.role}</p>
+                  </div>
+                </div>
+              </Reveal>
+            ))}
           </div>
         </div>
       </section>

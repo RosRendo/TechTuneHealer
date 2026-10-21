@@ -172,6 +172,35 @@ export interface Translations {
   aiRunDiagnosticBtn: string;
   aiClose: string;
   aiEmergencyNotice: string;
+
+  // ── Store download CTAs (motorist-first landing) ──
+  heroGetApp: string;
+  heroIosBadge: string;
+  heroIosBadgeLabel: string;
+  heroAndroidBadge: string;
+  heroAndroidBadgeLabel: string;
+  heroScanLabel: string;
+  heroScanSub: string;
+
+  // ── Social proof section (draft testimonials — swap in real quotes) ──
+  testEyebrow: string;
+  testTitle: string;
+  testSubtitle: string;
+  test1Quote: string;
+  test1Name: string;
+  test1Role: string;
+  test2Quote: string;
+  test2Name: string;
+  test2Role: string;
+  test3Quote: string;
+  test3Name: string;
+  test3Role: string;
+  statUsers: string;
+  statUsersLabel: string;
+  statRescues: string;
+  statRescuesLabel: string;
+  statRating: string;
+  statRatingLabel: string;
 }
 
 export const translations: Record<Language, Translations> = {
@@ -186,13 +215,21 @@ export const translations: Record<Language, Translations> = {
     navPartnerPortal: "Partner Portal",
     navAiScan: "AI Scan",
 
-    heroEyebrow: "AUTOCARE • ON-DEMAND ROADSIDE INFRASTRUCTURE • PHNOM PENH",
-    heroTitle1: "Roadside rescue.",
-    heroTitle2: "Instantly dispatched.",
-    heroSubtitle: "When vehicles break down, TechTune Healer connects drivers directly to verified repair facilities, mobile emergency units, and genuine OEM parts.",
+    heroEyebrow: "24/7 ROADSIDE ASSISTANCE • PHNOM PENH • PAY BY KHQR",
+    heroTitle1: "Car trouble?",
+    heroTitle2: "Help is one tap away.",
+    heroSubtitle: "Breakdown in Phnom Penh? Open TechTune Healer and a vetted mechanic comes to your location — dead battery, flat tire, engine trouble. No phone calls, no price haggling, no cash. You pay by KHQR when the job is done.",
     heroCtaDriver: "Explore Driver App",
     heroCtaPartner: "Onboard Service Center",
     heroCtaAiScan: "Try AI Diagnostic Scan",
+
+    heroGetApp: "Get the app",
+    heroIosBadge: "Download on the",
+    heroIosBadgeLabel: "App Store",
+    heroAndroidBadge: "Get it on",
+    heroAndroidBadgeLabel: "Google Play",
+    heroScanLabel: "SCAN TO INSTALL",
+    heroScanSub: "Point any camera app at the QR",
 
     heroRefLabel: "Facility Reference",
     heroRefVal: "Tuol Kork Bay 01 • Active",
@@ -333,6 +370,26 @@ export const translations: Record<Language, Translations> = {
     aiRunDiagnosticBtn: "Run AI Neural Diagnostic",
     aiClose: "Close",
     aiEmergencyNotice: "Emergency SOS: In case of smoking engine or highway collision, pull over and call 119 immediately.",
+
+    // ── Social proof section (draft testimonials — swap in real quotes) ──
+    testEyebrow: "WHAT DRIVERS SAY",
+    testTitle: "Trusted on the busiest streets of Phnom Penh.",
+    testSubtitle: "Real rescues, real drivers — from Monivong boulevard traffic to midnight calls on Preah Monireth.",
+    test1Quote: "My battery died at the Russian Market at 9pm. I tapped SOS and a technician found me in 10 minutes — I paid by KHQR from inside my car. No cash, no stress.",
+    test1Name: "Dara P.",
+    test1Role: "Honda Vision owner • Chamkarmon",
+    test2Quote: "I used to call three garages and argue about the price. Now I just open the app, watch the mechanic move on the map, and see the price before we start.",
+    test2Name: "Sophea K.",
+    test2Role: "Toyota Camry driver • Tuol Kork",
+    test3Quote: "The AI scanner told me my brake pads were worn before any garage did. It even showed which workshop had the part in stock.",
+    test3Name: "Vannak S.",
+    test3Role: "Hyundai pickup owner • Sen Sok",
+    statUsers: "12,000+",
+    statUsersLabel: "Driver app installs",
+    statRescues: "4,800+",
+    statRescuesLabel: "Rescues completed",
+    statRating: "4.9",
+    statRatingLabel: "Average store rating",
   },
 
   km: {
@@ -346,13 +403,21 @@ export const translations: Record<Language, Translations> = {
     navPartnerPortal: "ផតថលដៃគូ",
     navAiScan: "ស្កេនវិភាគ AI",
 
-    heroEyebrow: "សេវាកម្មជួសជុលរថយន្ត • ប្រព័ន្ធសង្គ្រោះបន្ទាន់លើដងផ្លូវ • រាជធានីភ្នំពេញ",
-    heroTitle1: "សង្គ្រោះលើដងផ្លូវ។",
-    heroTitle2: "បញ្ជូនជាងក្នុង ១៥ នាទី។",
-    heroSubtitle: "នៅពេលរថយន្តរបស់អ្នកជួបបញ្ហា TechTune Healer នឹងភ្ជាប់ទំនាក់ទំនងអ្នកបើកបរទៅកាន់យានដ្ឋានស្តង់ដារ ក្រុមសង្គ្រោះបន្ទាន់ចល័ត និងគ្រឿងបន្លាស់ OEM ពិតប្រាកដ។",
+    heroEyebrow: "ជំនួយ ២៤ ម៉ោង • ភ្នំពេញ • ទូទាត់តាម KHQR",
+    heroTitle1: "រថយន្តខូច?",
+    heroTitle2: "ជំនួយនៅចម្ងាយមួយចុច។",
+    heroSubtitle: "រថយន្តរបស់អ្នកខូចនៅរាជធានីភ្នំពេញ? បើកកម្មវិធី TechTune Healer ជាងដែលបានផ្ទៀងផ្ទាត់នឹងមកដល់ទីតាំងរបស់អ្នក—អាគុយអស់ កង់បែក ឬបញ្ហាម៉ាស៊ីន។ មិនបាច់ហៅទូរស័ព្ទ មិនបាច់តថ្លៃ មិនត្រូវការកាក់សិត។ អ្នកទូទាត់តាម KHQR ពេលការងាររួចរាល់។",
     heroCtaDriver: "សាកល្បងកម្មវិធីអ្នកបើកបរ",
     heroCtaPartner: "ចុះឈ្មោះយានដ្ឋានជួសជុល",
     heroCtaAiScan: "ស្កេនវិភាគបញ្ហាដោយ AI",
+
+    heroGetApp: "ទាញយកកម្មវិធី",
+    heroIosBadge: "ទាញយកលើ",
+    heroIosBadgeLabel: "App Store",
+    heroAndroidBadge: "ទាញយកលើ",
+    heroAndroidBadgeLabel: "Google Play",
+    heroScanLabel: "ស្កេនដើម្បីដំឡើង",
+    heroScanSub: "ចង្អុលកាមេរ៉ាទៅកាន់ QR",
 
     heroRefLabel: "យានដ្ឋានយោង",
     heroRefVal: "ទួលគោក បន្ទប់លេខ ០១ • កំពុងដំណើរការ",
@@ -493,5 +558,25 @@ export const translations: Record<Language, Translations> = {
     aiRunDiagnosticBtn: "ដំណើរការវិភាគ AI ឥឡូវនេះ",
     aiClose: "បិទ",
     aiEmergencyNotice: "ការសង្គ្រោះបន្ទាន់៖ ក្នុងករណីមានផ្សែងចេញពីម៉ាស៊ីន ឬគ្រោះថ្នាក់លើផ្លូវល្បឿនលឿន សូមអែបខាង និងទូរស័ព្ទទៅលេខ ១១៩ ជាបន្ទាន់។",
+
+    // ── Social proof section (draft testimonials — swap in real quotes) ──
+    testEyebrow: "អ្វីដែលអ្នកបើកបរនិយាយ",
+    testTitle: "ទំនុកចិត្តលើផ្លូវធម្មតាបំផុតនៅភ្នំពេញ។",
+    testSubtitle: "សេវាសង្គ្រោះជាក់ស្តែង ពីចរាចរផ្លូវព្រះនរោត្តម ដល់ការទូរស័ព្ទសុំជំនួយកណ្តាលអធ្រាត្រ។",
+    test1Quote: "អាគុយរបស់ខ្ញុំអស់នៅផ្សារធំថ្មី ម៉ោង ៩ យប់។ ខ្ញុំចុច SOS ហើយជាងមកដល់ក្នុង ១០ នាទី—ខ្ញុំទូទាត់តាម KHQR ពេលនៅក្នុងឡាន។ គ្មានកាក់សិត គ្មានភាពតានតតុន។",
+    test1Name: "ឌារ៉ា ប.",
+    test1Role: "ម្ចាស់ Honda Vision • ចំការមន",
+    test2Quote: "មុនខ្ញុំត្រូវហៅយានដ្ឋាន ៣ កន្លែងដើម្បីតថ្លៃ។ ឥឡូវខ្ញុំគ្រាន់តែបើកកម្មវិធី មើលជាងចេះដល់តាមផែនទី ហើយឃើញតម្លៃច្បាស់លាស់ មុនចាប់ផ្តើមការងារ។",
+    test2Name: "សុភា ក.",
+    test2Role: "ម្ចាស់ Toyota Camry • ទួលគោក",
+    test3Quote: "ការស្កេន AI ប្រាប់ខ្ញុំថាប្រភេទហ្វ្រាំងរបស់ខ្ញុំត្រូវប្តូរ មុនគ្រប់យានដ្ឋានណាមួយ។ វាបង្ហាញផងដែរថាយានដ្ឋានណាមានគ្រឿងក្នុងស្តុក។",
+    test3Name: "វណ្ណៈ ស.",
+    test3Role: "ម្ចាស់ Hyundai តូណា • សែនសុខ",
+    statUsers: "១២,០០០+",
+    statUsersLabel: "ជាងដំឡើងកម្មវិធី",
+    statRescues: "៤,៨០០+",
+    statRescuesLabel: "សេវាសង្គ្រោះបានបញ្ចប់",
+    statRating: "៤.៩",
+    statRatingLabel: "ការវាយតម្លៃជាមធ្យម",
   },
 };
