@@ -450,7 +450,7 @@ export default function DashboardPage() {
 
           <Link
             href="/chat"
-            className="bg-[#2A65F0] hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-xs font-semibold flex items-center gap-1.5 shadow-xs transition"
+            className="bg-[#2A65F0] hover:bg-[#1F51D6] text-white px-4 py-2 rounded-lg text-xs font-semibold flex items-center gap-1.5 shadow-xs transition"
           >
             <span>Live Chat Hub</span>
             <span className="text-[10px]">&rarr;</span>
@@ -649,7 +649,7 @@ export default function DashboardPage() {
           <div className="p-4 rounded-xl bg-slate-50 border border-slate-100 space-y-1">
             <span className="text-xs text-slate-400 font-normal">Platform Revenue</span>
             <div className="flex items-baseline gap-2">
-              <span className="text-2xl sm:text-3xl font-extrabold text-blue-600 font-mono tracking-tight">
+              <span className="text-2xl sm:text-3xl font-extrabold text-[#2A65F0] font-mono tracking-tight">
                 {fmtCurrency(financialOverview?.platformFee ?? (metrics?.totalRevenue ?? 0) * 0.1)}
               </span>
               <span className="text-xs text-slate-500 font-mono">10% fee</span>

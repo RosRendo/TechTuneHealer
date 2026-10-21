@@ -855,7 +855,7 @@ export default function ProviderDashboardPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#F5F6F8] flex flex-col items-center justify-center gap-3">
+      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center gap-3">
         <div className="w-8 h-8 border-2 border-slate-900 border-t-transparent rounded-full animate-spin" />
         <p className="text-slate-400 text-xs">Loading workshop workstation...</p>
       </div>
@@ -863,7 +863,7 @@ export default function ProviderDashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F5F6F8] text-slate-900 flex flex-row antialiased selection:bg-blue-600 selection:text-white">
+    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-row antialiased selection:bg-[#2A65F0] selection:text-white">
       {/* Toast Notification */}
       {toastMessage && (
         <div className="fixed bottom-6 right-6 z-50 bg-slate-900 text-white px-4 py-2.5 rounded-lg text-xs font-medium shadow-lg flex items-center gap-2 animate-in fade-in duration-200">
@@ -1016,7 +1016,7 @@ export default function ProviderDashboardPage() {
               <span>Live Chat Hub</span>
             </div>
             {chatMessages.length > 0 && (
-              <span className="px-1.5 py-0.2 rounded-full bg-blue-50 text-blue-700 text-[10px] font-mono">
+              <span className="px-1.5 py-0.2 rounded-full bg-[#EEF3FE] text-[#2A65F0] text-[10px] font-mono">
                 {chatMessages.length}
               </span>
             )}
@@ -1060,7 +1060,7 @@ export default function ProviderDashboardPage() {
         </nav>
 
         {/* 24/7 Roadside Emergency Standby Card */}
-        <div className="p-3 mx-3 mb-2 bg-[#F9FAFB] border border-slate-100 rounded-xl space-y-1.5">
+        <div className="p-3 mx-3 mb-2 bg-slate-50 border border-slate-100 rounded-xl space-y-1.5">
           <div className="flex items-center justify-between">
             <span className="text-[11px] font-semibold text-slate-800">24/7 SOS Standby</span>
             <span className={`w-2 h-2 rounded-full ${isEmergencyActive ? "bg-emerald-500 animate-pulse" : "bg-slate-300"}`} />
@@ -1135,7 +1135,7 @@ export default function ProviderDashboardPage() {
             <div className="relative">
               <button
                 onClick={() => setCreateDropdownOpen((prev) => !prev)}
-                className="bg-[#2A65F0] hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-xs font-semibold flex items-center gap-2 shadow-xs transition cursor-pointer"
+                className="bg-[#2A65F0] hover:bg-[#1F51D6] text-white px-4 py-2 rounded-lg text-xs font-semibold flex items-center gap-2 shadow-xs transition cursor-pointer"
               >
                 <span>Create</span>
                 <span className="text-[10px]">▼</span>
@@ -1500,7 +1500,7 @@ export default function ProviderDashboardPage() {
                       value={dispatchSearch}
                       onChange={(e) => setDispatchSearch(e.target.value)}
                       placeholder="Search motorist, vehicle, plate..."
-                      className="px-3.5 py-1.5 text-xs border border-slate-200 rounded-lg focus:outline-none focus:border-slate-900 bg-[#F9FAFB] w-56"
+                      className="px-3.5 py-1.5 text-xs border border-slate-200 rounded-lg focus:outline-none focus:border-slate-900 bg-slate-50 w-56"
                     />
                   </div>
 
@@ -1526,7 +1526,7 @@ export default function ProviderDashboardPage() {
                               key={b.id}
                               onClick={() => setSelectedBookingId(b.id)}
                               className={`cursor-pointer transition-colors ${
-                                isSelected ? "bg-[#F4F7FC] font-medium" : "hover:bg-slate-50/60"
+                                isSelected ? "bg-[#EEF3FE] font-medium" : "hover:bg-slate-50/60"
                               }`}
                             >
                               <td className="py-3 font-mono font-bold text-slate-900">
@@ -1550,7 +1550,7 @@ export default function ProviderDashboardPage() {
                                     st === "pending"
                                       ? "bg-amber-50 text-amber-700 border border-amber-200"
                                       : st === "accepted" || st === "in_progress"
-                                      ? "bg-blue-50 text-blue-700 border border-blue-200"
+                                      ? "bg-[#EEF3FE] text-[#2A65F0] border border-[#B9CBFA]"
                                       : "bg-emerald-50 text-emerald-700 border border-emerald-200"
                                   }`}
                                 >
@@ -1591,7 +1591,7 @@ export default function ProviderDashboardPage() {
                             }`}
                           >
                             <span>Live Chat</span>
-                            <span className="px-1.5 py-0.2 rounded-full bg-blue-50 text-blue-700 text-[10px] font-mono">
+                            <span className="px-1.5 py-0.2 rounded-full bg-[#EEF3FE] text-[#2A65F0] text-[10px] font-mono">
                               {chatMessages.length}
                             </span>
                           </button>
@@ -1605,7 +1605,7 @@ export default function ProviderDashboardPage() {
                       {dossierTab === "specs" ? (
                         <div className="space-y-4 text-xs">
                           {/* Motorist Card */}
-                          <div className="p-3.5 bg-[#F9FAFB] rounded-xl space-y-1.5 border border-slate-100">
+                          <div className="p-3.5 bg-slate-50 rounded-xl space-y-1.5 border border-slate-100">
                             <div className="flex items-center justify-between">
                               <span className="font-bold text-slate-900 text-sm">
                                 {activeSelectedBooking.customerName || activeSelectedBooking.customer?.name || "Motorist"}
@@ -1647,7 +1647,7 @@ export default function ProviderDashboardPage() {
                             </div>
                             <p className="text-[#2A65F0] font-medium pt-1">{activeSelectedBooking.serviceType}</p>
                             {activeSelectedBooking.notes && (
-                              <p className="text-slate-500 text-[11px] italic mt-1 bg-[#F9FAFB] p-2 rounded">
+                              <p className="text-slate-500 text-[11px] italic mt-1 bg-slate-50 p-2 rounded">
                                 &quot;{activeSelectedBooking.notes}&quot;
                               </p>
                             )}
@@ -1696,7 +1696,7 @@ export default function ProviderDashboardPage() {
                             {activeSelectedBooking.status.toLowerCase() === "accepted" && (
                               <button
                                 onClick={() => updateBookingStatus(activeSelectedBooking.id, "IN_PROGRESS")}
-                                className="w-full py-2.5 rounded-lg bg-[#2A65F0] text-white font-medium text-xs hover:bg-blue-700 cursor-pointer"
+                                className="w-full py-2.5 rounded-lg bg-[#2A65F0] text-white font-medium text-xs hover:bg-[#1F51D6] cursor-pointer"
                               >
                                 Move into Bay &amp; Start Service
                               </button>
@@ -1736,7 +1736,7 @@ export default function ProviderDashboardPage() {
                                     className={`p-2.5 rounded-xl leading-relaxed ${
                                       isMe
                                         ? "bg-slate-900 text-white"
-                                        : "bg-[#F9FAFB] border border-slate-200/70 text-slate-800"
+                                        : "bg-slate-50 border border-slate-200/70 text-slate-800"
                                     }`}
                                   >
                                     {msg.text}
@@ -1857,7 +1857,7 @@ export default function ProviderDashboardPage() {
                                   st === "pending"
                                     ? "bg-amber-50 text-amber-700 border border-amber-200"
                                     : st === "accepted" || st === "in_progress"
-                                    ? "bg-blue-50 text-blue-700 border border-blue-200"
+                                    ? "bg-[#EEF3FE] text-[#2A65F0] border border-[#B9CBFA]"
                                     : "bg-emerald-50 text-emerald-700 border border-emerald-200"
                                 }`}
                               >
@@ -1896,7 +1896,7 @@ export default function ProviderDashboardPage() {
                         <span className="font-bold text-slate-900 text-sm">{bay.name}</span>
                         <span
                           className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${
-                            isOccupied ? "bg-blue-50 text-blue-700" : "bg-emerald-50 text-emerald-700"
+                            isOccupied ? "bg-[#EEF3FE] text-[#2A65F0]" : "bg-emerald-50 text-emerald-700"
                           }`}
                         >
                           {isOccupied ? "OCCUPIED" : "VACANT"}
@@ -2018,7 +2018,7 @@ export default function ProviderDashboardPage() {
                                 });
                                 setServiceModalOpen(true);
                               }}
-                              className="text-blue-600 hover:underline mr-3 text-xs"
+                              className="text-[#2A65F0] hover:underline mr-3 text-xs"
                             >
                               Edit
                             </button>
@@ -2150,7 +2150,7 @@ export default function ProviderDashboardPage() {
                       </div>
                       <p className="text-xs text-slate-600 leading-relaxed">&quot;{rev.comment}&quot;</p>
                       {rev.reply ? (
-                        <div className="bg-[#F9FAFB] p-2.5 rounded text-xs text-slate-600 italic">
+                        <div className="bg-slate-50 p-2.5 rounded text-xs text-slate-600 italic">
                           <span className="font-semibold text-slate-800 not-italic">Workshop Response: </span>
                           {rev.reply.text}
                         </div>
@@ -2160,7 +2160,7 @@ export default function ProviderDashboardPage() {
                             setReplyModalReview(rev);
                             setReplyInput("");
                           }}
-                          className="text-xs text-blue-600 hover:underline font-medium cursor-pointer"
+                          className="text-xs text-[#2A65F0] hover:underline font-medium cursor-pointer"
                         >
                           Reply to review
                         </button>
@@ -2487,7 +2487,7 @@ export default function ProviderDashboardPage() {
         <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-slate-200 space-y-4">
             <h3 className="font-bold text-slate-900 text-sm">Reply to Review</h3>
-            <div className="p-3 bg-[#F9FAFB] rounded-lg text-xs italic text-slate-600">
+            <div className="p-3 bg-slate-50 rounded-lg text-xs italic text-slate-600">
               &quot;{replyModalReview.comment}&quot;
             </div>
             <textarea
