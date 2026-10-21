@@ -674,44 +674,81 @@ export default function DashboardPage() {
               <span className="text-2xl sm:text-3xl font-extrabold text-slate-900 font-mono tracking-tight">
                 {fmtCurrency(financialOverview?.oemPartsRevenue ?? (metrics?.totalRevenue ?? 0) * 0.165)}
               </span>
-              <span className="text-xs text-emerald-600 font-bold font-mono">&uarr; 8.1%</span>
+              <span className="text-xs text-slate-400 font-mono">paid orders</span>
             </div>
             <p className="text-[11px] text-slate-400">Batteries, lubricants &amp; brake pads</p>
           </div>
         </div>
 
-        {/* Revenue Trend Curve */}
+        {/* Revenue Trend Curve — derived from real monthly booking data */}
         <div className="pt-2 space-y-3">
           <div className="flex items-center justify-between text-xs">
-            <span className="font-bold text-slate-800">Platform Revenue Trendline</span>
-            <span className="text-slate-400 font-mono text-[11px]">Monthly Gross Billings Trajectory</span>
+            <span className="font-bold text-slate-800">Completed Repairs Trendline</span>
+            <span className="text-slate-400 font-mono text-[11px]">Last 6 Months • Live Data</span>
           </div>
-          <div className="relative w-full h-36 select-none">
-            <svg className="w-full h-full overflow-visible" viewBox="0 0 800 140" preserveAspectRatio="none">
-              <defs>
-                <linearGradient id="adminRevGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#2A65F0" stopOpacity="0.18" />
-                  <stop offset="100%" stopColor="#2A65F0" stopOpacity="0.0" />
-                </linearGradient>
-              </defs>
-              <line x1="0" y1="20" x2="800" y2="20" stroke="#F1F5F9" strokeWidth="1" />
-              <line x1="0" y1="60" x2="800" y2="60" stroke="#F1F5F9" strokeWidth="1" />
-              <line x1="0" y1="100" x2="800" y2="100" stroke="#F1F5F9" strokeWidth="1" />
-              <line x1="0" y1="140" x2="800" y2="140" stroke="#F1F5F9" strokeWidth="1" />
-              <path d="M 20 120 C 140 110, 260 85, 380 75 C 500 65, 620 35, 780 20 L 780 140 L 20 140 Z" fill="url(#adminRevGrad)" />
-              <path d="M 20 120 C 140 110, 260 85, 380 75 C 500 65, 620 35, 780 20" fill="none" stroke="#2A65F0" strokeWidth="2.5" />
-              <circle cx="20" cy="120" r="4" fill="#2A65F0" stroke="#fff" strokeWidth="2" />
-              <circle cx="260" cy="85" r="4" fill="#2A65F0" stroke="#fff" strokeWidth="2" />
-              <circle cx="500" cy="65" r="4" fill="#2A65F0" stroke="#fff" strokeWidth="2" />
-              <circle cx="780" cy="20" r="5" fill="#2A65F0" stroke="#fff" strokeWidth="2" />
-            </svg>
-            <div className="flex justify-between text-[10px] text-slate-400 font-mono pt-1">
-              <span>Week 1: $4,200</span>
-              <span>Week 2: $5,800</span>
-              <span>Week 3: $6,900</span>
-              <span>Week 4: $7,920</span>
-            </div>
-          </div>
+          {(() => {
+            const pts = monthlyTrends.map((m, i) => ({
+              label: `${m.month}: ${m.completedCount} completed`,
+              value: m.completedCount,
+              i,
+            }));
+            const W = 800, H = 140, PAD = 20;
+            const maxVal = Math.max(1, ...pts.map((p) => p.value));
+            const minVal = Math.min(...pts.map((p) => p.value));
+            const range = Math.max(1, maxVal - minVal);
+            const n = Math.max(1, pts.length - 1);
+            const coords = pts.map((p) => ({
+              x: PAD + (p.i * (W - 2 * PAD)) / n,
+              y: H - PAD - ((p.value - minVal) / range) * (H - 2 * PAD),
+            }));
+            const line = coords
+              .map((c, idx) => `${idx === 0 ? "M" : "L"} ${c.x} ${c.y}`)
+              .join("  ");
+            const area = `${line} L ${coords[coords.length - 1]?.x ?? W - PAD} ${H} L ${coords[0]?.x ?? PAD} ${H} Z`;
+            return (
+              <div className="relative w-full h-36 select-none">
+                <svg className="w-full h-full overflow-visible" viewBox="0 0 800 140" preserveAspectRatio="none">
+                  <defs>
+                    <linearGradient id="adminRevGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#2A65F0" stopOpacity="0.18" />
+                      <stop offset="100%" stopColor="#2A65F0" stopOpacity="0.0" />
+                    </linearGradient>
+                  </defs>
+                  <line x1="0" y1="20" x2="800" y2="20" stroke="#F1F5F9" strokeWidth="1" />
+                  <line x1="0" y1="60" x2="800" y2="60" stroke="#F1F5F9" strokeWidth="1" />
+                  <line x1="0" y1="100" x2="800" y2="100" stroke="#F1F5F9" strokeWidth="1" />
+                  <line x1="0" y1="140" x2="800" y2="140" stroke="#F1F5F9" strokeWidth="1" />
+                  {coords.length > 1 && (
+                    <>
+                      <path d={area} fill="url(#adminRevGrad)" />
+                      <path d={line} fill="none" stroke="#2A65F0" strokeWidth="2.5" />
+                      {coords.map((c, idx) => (
+                        <circle
+                          key={idx}
+                          cx={c.x}
+                          cy={c.y}
+                          r={idx === coords.length - 1 ? 5 : 4}
+                          fill="#2A65F0"
+                          stroke="#fff"
+                          strokeWidth="2"
+                        />
+                      ))}
+                    </>
+                  )}
+                  {coords.length <= 1 && (
+                    <text x="400" y="70" textAnchor="middle" fill="#94A3B8" fontSize="12" fontFamily="monospace">
+                      Collecting data…
+                    </text>
+                  )}
+                </svg>
+                <div className="flex justify-between text-[10px] text-slate-400 font-mono pt-1">
+                  {pts.map((p) => (
+                    <span key={p.i}>{p.label}</span>
+                  ))}
+                </div>
+              </div>
+            );
+          })()}
         </div>
       </div>
 

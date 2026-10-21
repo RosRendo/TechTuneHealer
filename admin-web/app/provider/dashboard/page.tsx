@@ -116,7 +116,7 @@ export default function ProviderDashboardPage() {
   const [hoveredStackedIndex, setHoveredStackedIndex] = useState<number | null>(null);
 
   // Authentication & Facility Profile
-  const [, setProviderUser] = useState<ProviderUser | null>(null);
+  const [providerUser, setProviderUser] = useState<ProviderUser | null>(null);
   const [workshopProfile, setWorkshopProfile] = useState({
     businessName: "Speedy Auto Fix Workstation",
     address: "Street 271, Sangkat Olympic, Khan Boeng Keng Kang, Phnom Penh",
@@ -597,6 +597,9 @@ export default function ProviderDashboardPage() {
     return Math.round((reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length) * 10) / 10;
   }, [reviews]);
 
+  // The signed-in mechanic name labels bays without a person override
+  const technicianLabel = providerUser?.name || workshopProfile.businessName;
+
   // Dynamically derive bay occupancy from active bookings in the DB
   const bays: ServiceBay[] = useMemo(() => {
     const activeJobs = bookings.filter((b) => {
@@ -616,7 +619,7 @@ export default function ProviderDashboardPage() {
           currentVehicle: override.currentVehicle || "Walk-in Inspection",
           service: override.service || "Multi-Point Diagnostic",
           plate: override.plate || "PP Registered",
-          technician: override.technician || "Lead Tech Dara",
+          technician: override.technician || technicianLabel,
           timeInBay: "Active in bay",
         };
       }
@@ -637,7 +640,7 @@ export default function ProviderDashboardPage() {
           status: "occupied" as const,
           currentVehicle: vehicleStr,
           service: assignedJob.serviceType,
-          technician: "Lead Tech Dara",
+          technician: technicianLabel,
           plate: assignedJob.vehicle?.plateNumber || "PP Registered",
           timeInBay: "Active in bay",
         };
@@ -648,7 +651,7 @@ export default function ProviderDashboardPage() {
         status: "vacant" as const,
       };
     });
-  }, [bookings, assignedBays, bayOverrides]);
+  }, [bookings, assignedBays, bayOverrides, technicianLabel]);
 
   // Dynamically derive last 7 days performance from bookings
   const weeklyPerformance = useMemo(() => {
