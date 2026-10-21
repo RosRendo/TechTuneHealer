@@ -122,8 +122,8 @@ export default function DemandCapacityChart({
               <stop offset="100%" stopColor="#F43F5E" stopOpacity="0.0" />
             </linearGradient>
             <linearGradient id="capacityGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#2563EB" stopOpacity="0.18" />
-              <stop offset="100%" stopColor="#2563EB" stopOpacity="0.0" />
+              <stop offset="0%" stopColor="#2A65F0" stopOpacity="0.18" />
+              <stop offset="100%" stopColor="#2A65F0" stopOpacity="0.0" />
             </linearGradient>
           </defs>
 
@@ -142,7 +142,7 @@ export default function DemandCapacityChart({
 
           {/* Capacity Area & Line */}
           <path d={capacityArea} fill="url(#capacityGrad)" />
-          <path d={capacityLine} fill="none" stroke="#2563EB" strokeWidth="2.5" />
+          <path d={capacityLine} fill="none" stroke="#2A65F0" strokeWidth="2.5" />
 
           {/* Demand Area & Line */}
           <path d={demandArea} fill="url(#demandGrad)" />
@@ -182,7 +182,7 @@ export default function DemandCapacityChart({
                   cx={x}
                   cy={yC}
                   r={isHovered ? 6 : 4}
-                  fill="#2563EB"
+                  fill="#2A65F0"
                   stroke="#FFFFFF"
                   strokeWidth="2"
                   className="cursor-pointer transition-all"

@@ -28,7 +28,7 @@ const DEFAULT_STAGES: FunnelStage[] = [
     label: "TECH EN ROUTE",
     count: 108,
     subtext: "Mobile unit deployed to GPS pin",
-    color: "#2563EB",
+    color: "#2A65F0",
     dropOff: 9,
     dropOffRate: "7.7% cancelled by motorist",
   },
