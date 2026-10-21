@@ -129,6 +129,71 @@ router.post("/cart/items", authenticate, async (req: AuthRequest, res: Response)
 });
 
 // --- Orders ---
+// PATCH /shop/cart/items/:itemId — set quantity (qty 0 removes the row)
+router.patch("/cart/items/:itemId", authenticate, async (req: AuthRequest, res: Response) => {
+  const userId = req.userId;
+  if (!userId) return;
+
+  const { quantity } = req.body as { quantity: number };
+  const qty = Math.floor(quantity);
+
+  if (typeof qty !== "number" || !Number.isInteger(qty) || qty < 0) {
+    res.status(400).json({ message: "Quantity must be a non-negative integer" });
+    return;
+  }
+
+  try {
+    const cart = await prisma.cart.findUnique({ where: { customerId: userId } });
+    if (!cart) { res.status(404).json({ message: "Cart not found" }); return; }
+
+    const item = await prisma.cartItem.findFirst({
+      where: { id: req.params["itemId"] as string, cartId: cart.id },
+    });
+    if (!item) { res.status(404).json({ message: "Cart item not found" }); return; }
+
+    if (qty === 0) {
+      await prisma.cartItem.delete({ where: { id: item.id } });
+    } else {
+      await prisma.cartItem.update({ where: { id: item.id }, data: { quantity: qty } });
+    }
+
+    const updated = await prisma.cart.findUnique({
+      where: { customerId: userId },
+      include: { items: { include: { product: true } } },
+    });
+    res.json(updated);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Error updating cart item" });
+  }
+});
+
+// DELETE /shop/cart/items/:itemId — remove one row from the cart
+router.delete("/cart/items/:itemId", authenticate, async (req: AuthRequest, res: Response) => {
+  const userId = req.userId;
+  if (!userId) return;
+
+  try {
+    const cart = await prisma.cart.findUnique({ where: { customerId: userId } });
+    if (!cart) { res.status(404).json({ message: "Cart not found" }); return; }
+
+    const item = await prisma.cartItem.findFirst({
+      where: { id: req.params["itemId"] as string, cartId: cart.id },
+    });
+    if (!item) { res.status(404).json({ message: "Cart item not found" }); return; }
+
+    await prisma.cartItem.delete({ where: { id: item.id } });
+
+    const updated = await prisma.cart.findUnique({
+      where: { customerId: userId },
+      include: { items: { include: { product: true } } },
+    });
+    res.json(updated);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Error removing cart item" });
+  }
+});
 
 // POST /shop/orders/checkout
 router.post("/orders/checkout", authenticate, async (req: AuthRequest, res: Response) => {

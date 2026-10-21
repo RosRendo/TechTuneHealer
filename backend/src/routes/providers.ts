@@ -6,6 +6,17 @@ import type { AuthRequest } from "../middleware/auth.js";
 
 const router = Router();
 
+/** Fallback labor estimate when a completed booking has no finalPrice yet */
+function resolveEstimate(serviceType: string): number {
+  const s = (serviceType || "").toLowerCase();
+  if (s.includes("emergency") || s.includes("rescue")) return 65;
+  if (s.includes("tire") || s.includes("wheel")) return 30;
+  if (s.includes("battery")) return 25;
+  if (s.includes("brake")) return 55;
+  if (s.includes("engine") || s.includes("diagnostic")) return 60;
+  return 45;
+}
+
 /** Haversine distance formula (km) */
 function haversine(lat1: number, lon1: number, lat2: number, lon2: number) {
   const R = 6371;
@@ -305,10 +316,13 @@ router.patch("/me", authenticate, async (req: AuthRequest, res: Response) => {
 
 // POST /providers/me/services — add new service
 router.post("/me/services", authenticate, async (req: AuthRequest, res: Response) => {
-  const { name, description, price } = req.body as {
+  const { name, description, price, category, durationMinutes, isActive } = req.body as {
     name: string;
     description?: string;
     price: number;
+    category?: string;
+    durationMinutes?: number;
+    isActive?: boolean;
   };
 
   if (!name || price === undefined) {
@@ -330,6 +344,9 @@ router.post("/me/services", authenticate, async (req: AuthRequest, res: Response
       name,
       description: description || "",
       price: Number(price),
+      ...(category !== undefined ? { category: String(category) } : {}),
+      ...(durationMinutes !== undefined ? { durationMinutes: Math.max(15, Number(durationMinutes)) } : {}),
+      ...(isActive !== undefined ? { isActive: Boolean(isActive) } : {}),
     },
   });
 
@@ -339,10 +356,13 @@ router.post("/me/services", authenticate, async (req: AuthRequest, res: Response
 // PUT /providers/me/services/:serviceId — update existing service
 router.put("/me/services/:serviceId", authenticate, async (req: AuthRequest, res: Response) => {
   const serviceId = req.params["serviceId"] as string;
-  const { name, description, price } = req.body as {
+  const { name, description, price, category, durationMinutes, isActive } = req.body as {
     name?: string;
     description?: string;
     price?: number;
+    category?: string;
+    durationMinutes?: number;
+    isActive?: boolean;
   };
 
   const provider = await prisma.serviceProvider.findUnique({
@@ -367,6 +387,9 @@ router.put("/me/services/:serviceId", authenticate, async (req: AuthRequest, res
       ...(name !== undefined ? { name } : {}),
       ...(description !== undefined ? { description } : {}),
       ...(price !== undefined ? { price: Number(price) } : {}),
+      ...(category !== undefined ? { category: String(category) } : {}),
+      ...(durationMinutes !== undefined ? { durationMinutes: Math.max(15, Number(durationMinutes)) } : {}),
+      ...(isActive !== undefined ? { isActive: Boolean(isActive) } : {}),
     },
   });
 
@@ -407,7 +430,11 @@ router.patch("/me/availability", authenticate, async (req: AuthRequest, res: Res
   });
   if (!provider) { res.status(404).json({ message: "Provider profile not found" }); return; }
 
-  // Since workingHours or metadata can store availability
+  await prisma.serviceProvider.update({
+    where: { id: provider.id },
+    data: { isAvailable: Boolean(isAvailable) },
+  });
+
   res.json({
     success: true,
     isAvailable: Boolean(isAvailable),
@@ -426,12 +453,109 @@ router.patch("/me/settings", authenticate, async (req: AuthRequest, res: Respons
   });
   if (!provider) { res.status(404).json({ message: "Provider profile not found" }); return; }
 
+  // Persist what was sent so preferences survive restarts
+  await prisma.serviceProvider.update({
+    where: { id: provider.id },
+    data: {
+      ...(dispatchRadiusKm !== undefined
+        ? { dispatchRadiusKm: Math.min(100, Math.max(1, Number(dispatchRadiusKm))) }
+        : {}),
+      ...(isEmergencyOnCall !== undefined ? { isEmergencyOnCall: Boolean(isEmergencyOnCall) } : {}),
+    },
+  });
+
   res.json({
     success: true,
-    dispatchRadiusKm: dispatchRadiusKm ?? 20,
-    isEmergencyOnCall: isEmergencyOnCall ?? true,
+    dispatchRadiusKm: dispatchRadiusKm ?? provider.dispatchRadiusKm,
+    isEmergencyOnCall: isEmergencyOnCall ?? provider.isEmergencyOnCall,
     updatedAt: new Date().toISOString(),
   });
+});
+
+// PATCH /providers/me/hours — persist weekly opening hours
+router.patch("/me/hours", authenticate, async (req: AuthRequest, res: Response) => {
+  const { workingHours } = req.body as { workingHours: Record<string, unknown> };
+  if (!workingHours || typeof workingHours !== "object") {
+    res.status(400).json({ message: "workingHours object is required" });
+    return;
+  }
+
+  const provider = await prisma.serviceProvider.findUnique({
+    where: { userId: req.userId },
+  });
+  if (!provider) { res.status(404).json({ message: "Provider profile not found" }); return; }
+
+  const updated = await prisma.serviceProvider.update({
+    where: { id: provider.id },
+    data: { workingHours: JSON.parse(JSON.stringify(workingHours)) },
+  });
+
+  res.json(formatProvider(updated));
+});
+
+// GET /providers/me/payouts — the provider's payout ledger
+router.get("/me/payouts", authenticate, async (req: AuthRequest, res: Response) => {
+  const provider = await prisma.serviceProvider.findUnique({
+    where: { userId: req.userId },
+  });
+  if (!provider) { res.status(404).json({ message: "Provider profile not found" }); return; }
+
+  const payouts = await prisma.payoutRequest.findMany({
+    where: { providerId: provider.id },
+    orderBy: { createdAt: "desc" },
+  });
+  res.json(payouts);
+});
+
+// POST /providers/me/payouts — request a withdrawal from completed-job earnings
+router.post("/me/payouts", authenticate, async (req: AuthRequest, res: Response) => {
+  const { amount, method, note } = req.body as {
+    amount: number;
+    method?: string;
+    note?: string;
+  };
+
+  const provider = await prisma.serviceProvider.findUnique({
+    where: { userId: req.userId },
+  });
+  if (!provider) { res.status(404).json({ message: "Provider profile not found" }); return; }
+
+  // Available balance = 90% of completed jobs (10% network commission)
+  // minus everything already requested
+  const completed = await prisma.booking.findMany({
+    where: { providerId: provider.id, status: "COMPLETED" },
+    select: { finalPrice: true, serviceType: true },
+  });
+  const gross = completed.reduce(
+    (sum, b) => sum + Number(b.finalPrice ?? resolveEstimate(b.serviceType)),
+    0
+  );
+  const requested = await prisma.payoutRequest.aggregate({
+    where: { providerId: provider.id, status: { in: ["PENDING", "APPROVED", "PAID"] } },
+    _sum: { amount: true },
+  });
+  const available = Math.max(0, Math.round(gross * 0.9 - (requested._sum.amount ?? 0)));
+
+  const amt = Number(amount);
+  if (!Number.isFinite(amt) || amt <= 0) {
+    res.status(400).json({ message: "Invalid payout amount" });
+    return;
+  }
+  if (amt > available) {
+    res.status(400).json({ message: `Amount exceeds available balance ($${available.toFixed(2)})` });
+    return;
+  }
+
+  const payout = await prisma.payoutRequest.create({
+    data: {
+      providerId: provider.id,
+      amount: amt,
+      method: String(method || "KHQR").toUpperCase(),
+      note,
+    },
+  });
+
+  res.status(201).json(payout);
 });
 
 // GET /providers/:id

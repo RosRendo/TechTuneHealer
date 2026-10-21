@@ -736,8 +736,11 @@ router.get("/financials", async (req: Request, res: Response) => {
       prisma.serviceProvider.count(),
     ]);
 
-    // Calculate gross repair volume
-    const grossBookingsGmv = completedBookings.reduce((sum, b) => sum + 35.0, 0); // standard labor ticket
+    // Calculate gross repair volume from real stored earnings
+    const grossBookingsGmv =
+      Math.round(
+        completedBookings.reduce((sum, b) => sum + Number(b.finalPrice ?? 35.0), 0) * 100
+      ) / 100;
     const bookingCommission = Math.round(grossBookingsGmv * 0.1 * 100) / 100; // 10% network commission
     const workshopSettlements = Math.round((grossBookingsGmv - bookingCommission) * 100) / 100;
 

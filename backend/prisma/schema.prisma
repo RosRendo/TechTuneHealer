@@ -18,6 +18,7 @@ enum Role {
 enum BookingStatus {
   PENDING
   ACCEPTED
+  ARRIVED
   IN_PROGRESS
   COMPLETED
   CANCELLED
@@ -62,10 +63,19 @@ model ServiceProvider {
   rating        Float    @default(0)
   totalReviews  Int      @default(0)
 
+  // Duty & dispatch preferences (persisted so they survive app restarts)
+  isAvailable       Boolean @default(true)
+  dispatchRadiusKm  Int     @default(20)
+  isEmergencyOnCall Boolean @default(true)
+
+  // Opening hours per weekday, e.g. {"monday":{"isOpen":true,"openTime":"08:00","closeTime":"18:00"}}
+  workingHours Json?
+
   // Relations
   bookings      Booking[] @relation("ProviderBookings")
   reviews       Review[]  @relation("ProviderReviews")
   services      Service[]
+  payouts       PayoutRequest[]
 }
 
 model Vehicle {
@@ -87,10 +97,13 @@ model Service {
   id            String          @id @default(uuid())
   providerId    String
   provider      ServiceProvider @relation(fields: [providerId], references: [id], onDelete: Cascade)
-  
+
   name          String
   description   String?
   price         Float
+  category      String?
+  durationMinutes Int           @default(45)
+  isActive      Boolean         @default(true)
 }
 
 model Booking {
@@ -108,13 +121,35 @@ model Booking {
   scheduledDate DateTime
   scheduledTime String  // e.g., "14:30"
   notes         String?
-  
+
+  // Dispute-prevention: 4-digit code the customer shares with the mechanic on arrival
+  securityPin   String?
+
+  // Payment evidence recorded at checkout / completion
+  paymentMethod String?     // "khqr" | "card" | "cod"
+  paymentRef    String?     // bank transaction reference (KHQR TXN id)
+  estimatedPrice Float?
+  finalPrice    Float?
+
   status        BookingStatus @default(PENDING)
   cancelReason  String?
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
 
   review        Review?
+}
+
+model PayoutRequest {
+  id            String          @id @default(uuid())
+  providerId    String
+  provider      ServiceProvider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+
+  amount        Float
+  method        String          // "KHQR" | "ABA" | "CASH"
+  status        String          @default("PENDING") // PENDING | APPROVED | PAID | REJECTED
+  note          String?
+  createdAt     DateTime        @default(now())
+  processedAt   DateTime?
 }
 
 model Review {
