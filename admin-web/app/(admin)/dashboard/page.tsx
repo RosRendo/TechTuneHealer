@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback, useMemo } from "react";
 import api from "@/lib/api";
+import { bookingStatusBadge } from "@/lib/badges";
 import Link from "next/link";
 import NetworkDispatchMatrix from "@/components/operations/NetworkDispatchMatrix";
 import NeedsAttention, { AttentionItem } from "@/components/operations/NeedsAttention";
@@ -20,6 +21,8 @@ interface Metrics {
   bayUtilization?: number;
   resolutionRate?: number;
   arrivalSlaMinutes?: number;
+  pendingPayoutCount?: number;
+  pendingPayoutAmount?: number;
 }
 
 interface Booking {
@@ -90,14 +93,7 @@ interface MonthlyTrendItem {
   totalCount: number;
 }
 
-const statusBadgeStyle: Record<string, string> = {
-  PENDING: "bg-amber-50 text-amber-800 border border-amber-200",
-  ACCEPTED: "bg-blue-50 text-blue-800 border border-blue-200",
-  IN_PROGRESS: "bg-indigo-50 text-indigo-800 border border-indigo-200",
-  COMPLETED: "bg-emerald-50 text-emerald-800 border border-emerald-200",
-  CANCELLED: "bg-slate-100 text-slate-600 border border-slate-200",
-  REJECTED: "bg-slate-100 text-slate-600 border border-slate-200",
-};
+const statusBadgeStyle = bookingStatusBadge;
 
 export default function DashboardPage() {
   const [metrics, setMetrics] = useState<Metrics | null>(null);
@@ -131,7 +127,11 @@ export default function DashboardPage() {
 
   const fetchDashboardData = useCallback(async () => {
     try {
-      const res = await api.get("/admin/metrics");
+      // Last 30 days by default; backend supports 1/7/30/90-day windows
+      const daysMap: Record<string, number> = { today: 1, "7d": 7, "30d": 30, "90d": 90 };
+      const res = await api.get("/admin/metrics", {
+        params: daysMap[timeRange] ? { days: daysMap[timeRange] } : {},
+      });
       setMetrics(res.data.metrics);
       setRecentBookings(res.data.recentBookings || []);
       setStatusPipeline(res.data.statusPipeline || null);
@@ -154,7 +154,7 @@ export default function DashboardPage() {
       setLoading(false);
       setRefreshing(false);
     }
-  }, []);
+  }, [timeRange]);
 
   useEffect(() => {
     fetchDashboardData();
@@ -226,32 +226,43 @@ export default function DashboardPage() {
       });
     }
 
-    // 3. OEM Parts inventory threshold
-    items.push({
-      id: "att-adm-parts",
-      severity: "notice",
-      title: "OEM 12V AGM battery stock buffer",
-      subtitle: "3 partner workshops report inventory below recommended 6-unit threshold",
-      badge: "OEM INVENTORY",
-      actionLabel: "Bulk Requisition",
-      actionType: "restock",
-      targetId: "inventory",
-    });
+    // 3. Provider payout requests awaiting financial approval
+    if (metrics && (metrics.pendingPayoutCount ?? 0) > 0) {
+      items.push({
+        id: "att-adm-payouts",
+        severity: "notice",
+        title: `${metrics.pendingPayoutCount} workshop payout requests awaiting review`,
+        subtitle: `$${(metrics.pendingPayoutAmount ?? 0).toFixed(2)} in KHQR disbursements queued for approval`,
+        badge: "FINANCE QUEUE",
+        actionLabel: "Review Payouts",
+        actionType: "restock",
+        targetId: "financials",
+      });
+    }
 
-    // 4. Compliance review
-    items.push({
-      id: "att-adm-compliance",
-      severity: "notice",
-      title: "Municipal facility certifications",
-      subtitle: "2 partner garages have Ministry safety audits scheduled this month",
-      badge: "COMPLIANCE",
-      actionLabel: "Review Audits",
-      actionType: "renew_cert",
-      targetId: "audit-2026",
-    });
+    // 4. Underserved district coverage (from real workshop distribution)
+    const underserved = districtCoverage.filter(
+      (d) => d.status === "underserved"
+    );
+    if (underserved.length > 0) {
+      items.push({
+        id: "att-adm-coverage",
+        severity: "warning",
+        title: `${underserved.length} district${underserved.length > 1 ? "s" : ""} below optimal workshop coverage`,
+        subtitle: underserved
+          .map((d: { name?: string }) => d.name)
+          .filter(Boolean)
+          .slice(0, 2)
+          .join(", "),
+        badge: "COVERAGE GAP",
+        actionLabel: "Recruit Workshops",
+        actionType: "renew_cert",
+        targetId: "providers",
+      });
+    }
 
     return items;
-  }, [statusPipeline, metrics]);
+  }, [statusPipeline, metrics, districtCoverage]);
 
   // Dynamic Dispatch Funnel Stages derived directly from real statusPipeline
   const funnelStages = useMemo(() => {
@@ -282,7 +293,7 @@ export default function DashboardPage() {
         label: "TECH EN ROUTE",
         count: enRoute,
         subtext: "Mobile rescue unit deployed to scene",
-        color: "#2563EB",
+        color: "#2A65F0",
         dropOff: Math.max(0, accepted - enRoute),
         dropOffRate: accepted > 0 ? `${Math.round(((accepted - enRoute) / accepted) * 100)}% unassigned` : "0%",
       },
@@ -409,7 +420,7 @@ export default function DashboardPage() {
               Phnom Penh Network Command Console
             </h1>
             <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
-              ● 23 WORKSHOPS ONLINE
+              ● {metrics?.activeProviders ?? 0} WORKSHOPS ONLINE
             </span>
           </div>
           <p className="text-xs text-slate-400 mt-0.5">
@@ -439,7 +450,7 @@ export default function DashboardPage() {
 
           <Link
             href="/chat"
-            className="bg-[#2A5AF0] hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-xs font-semibold flex items-center gap-1.5 shadow-xs transition"
+            className="bg-[#2A65F0] hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-xs font-semibold flex items-center gap-1.5 shadow-xs transition"
           >
             <span>Live Chat Hub</span>
             <span className="text-[10px]">&rarr;</span>
@@ -450,7 +461,7 @@ export default function DashboardPage() {
       {/* Subheader / Tabs Bar & Unified Filters (Date Range + Municipal Sector) */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-200/70 pb-2 gap-4">
         <div className="flex items-center gap-6">
-          <span className="text-xs font-bold text-slate-900 pb-2 -mb-2 border-b-2 border-[#2A5AF0]">
+          <span className="text-xs font-bold text-slate-900 pb-2 -mb-2 border-b-2 border-[#2A65F0]">
             Network Operations
           </span>
           <Link href="/bookings" className="text-xs font-medium text-slate-400 hover:text-slate-700 pb-2 -mb-2 transition">
@@ -523,6 +534,10 @@ export default function DashboardPage() {
             onAction={(type, targetId) => {
               if (targetId === "providers") {
                 window.location.href = "/providers";
+              } else if (targetId === "financials") {
+                window.location.href = "/financials";
+              } else if (targetId === "pending") {
+                window.location.href = "/bookings";
               }
             }}
             className="h-full"
@@ -675,8 +690,8 @@ export default function DashboardPage() {
             <svg className="w-full h-full overflow-visible" viewBox="0 0 800 140" preserveAspectRatio="none">
               <defs>
                 <linearGradient id="adminRevGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#2A5AF0" stopOpacity="0.18" />
-                  <stop offset="100%" stopColor="#2A5AF0" stopOpacity="0.0" />
+                  <stop offset="0%" stopColor="#2A65F0" stopOpacity="0.18" />
+                  <stop offset="100%" stopColor="#2A65F0" stopOpacity="0.0" />
                 </linearGradient>
               </defs>
               <line x1="0" y1="20" x2="800" y2="20" stroke="#F1F5F9" strokeWidth="1" />
@@ -684,11 +699,11 @@ export default function DashboardPage() {
               <line x1="0" y1="100" x2="800" y2="100" stroke="#F1F5F9" strokeWidth="1" />
               <line x1="0" y1="140" x2="800" y2="140" stroke="#F1F5F9" strokeWidth="1" />
               <path d="M 20 120 C 140 110, 260 85, 380 75 C 500 65, 620 35, 780 20 L 780 140 L 20 140 Z" fill="url(#adminRevGrad)" />
-              <path d="M 20 120 C 140 110, 260 85, 380 75 C 500 65, 620 35, 780 20" fill="none" stroke="#2A5AF0" strokeWidth="2.5" />
-              <circle cx="20" cy="120" r="4" fill="#2A5AF0" stroke="#fff" strokeWidth="2" />
-              <circle cx="260" cy="85" r="4" fill="#2A5AF0" stroke="#fff" strokeWidth="2" />
-              <circle cx="500" cy="65" r="4" fill="#2A5AF0" stroke="#fff" strokeWidth="2" />
-              <circle cx="780" cy="20" r="5" fill="#2A5AF0" stroke="#fff" strokeWidth="2" />
+              <path d="M 20 120 C 140 110, 260 85, 380 75 C 500 65, 620 35, 780 20" fill="none" stroke="#2A65F0" strokeWidth="2.5" />
+              <circle cx="20" cy="120" r="4" fill="#2A65F0" stroke="#fff" strokeWidth="2" />
+              <circle cx="260" cy="85" r="4" fill="#2A65F0" stroke="#fff" strokeWidth="2" />
+              <circle cx="500" cy="65" r="4" fill="#2A65F0" stroke="#fff" strokeWidth="2" />
+              <circle cx="780" cy="20" r="5" fill="#2A65F0" stroke="#fff" strokeWidth="2" />
             </svg>
             <div className="flex justify-between text-[10px] text-slate-400 font-mono pt-1">
               <span>Week 1: $4,200</span>

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
+import api from "@/lib/api";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -13,9 +14,25 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     const token = localStorage.getItem("admin_token");
     if (!token) {
       router.push("/admin/login");
-    } else {
-      setChecked(true);
+      return;
     }
+
+    // Validate the token server-side: forged/garbage localStorage tokens get bounced
+    api
+      .get("/auth/profile")
+      .then((res) => {
+        if (res.data?.role !== "ADMIN") {
+          localStorage.removeItem("admin_token");
+          localStorage.removeItem("admin_user");
+          router.push("/admin/login");
+        } else {
+          setChecked(true);
+        }
+      })
+      .catch(() => {
+        // 401/403 handled by the interceptor; other errors fall through to re-check
+        setChecked(true);
+      });
   }, [router]);
 
   if (!checked) {

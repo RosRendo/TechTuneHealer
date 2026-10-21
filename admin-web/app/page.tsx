@@ -237,11 +237,6 @@ export default function EditorialLandingPage() {
     }
   };
 
-  const autofillProvider = () => {
-    setLoginEmail("sokha@test.com");
-    setLoginPassword("password123");
-  };
-
   // ─── Provider Registration Handler ────────────────────────────────────────
   const handleRegSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -1318,17 +1313,6 @@ export default function EditorialLandingPage() {
                       {loginLoading ? t.authSigningIn : t.authSubmitSignIn}
                     </button>
                   </form>
-
-                  <div className="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between text-xs">
-                    <span className="text-slate-400">Demo Account:</span>
-                    <button
-                      type="button"
-                      onClick={autofillProvider}
-                      className="font-bold text-slate-950 underline hover:no-underline cursor-pointer"
-                    >
-                      {t.authDemoFill}
-                    </button>
-                  </div>
                 </div>
               ) : (
                 /* ─── Register Form ─── */

@@ -50,7 +50,6 @@ export default function AdminLoginPage() {
     setEmail("admin@techtune.com");
     setPassword("admin123");
   };
-
   return (
     <div className="min-h-screen bg-[#F8FAFC] flex flex-col justify-between p-6 sm:p-10 antialiased selection:bg-slate-200">
       {/* Top Navbar */}
@@ -111,18 +110,6 @@ export default function AdminLoginPage() {
               {loading ? "Authenticating..." : "Access Console"}
             </button>
           </form>
-
-          {/* Autofill Demo */}
-          <div className="mt-5 pt-4 border-t border-slate-100 flex items-center justify-between text-xs">
-            <span className="text-slate-400">Dev account:</span>
-            <button
-              type="button"
-              onClick={autofillAdmin}
-              className="font-medium text-blue-600 hover:text-blue-700 hover:underline cursor-pointer"
-            >
-              Autofill credentials
-            </button>
-          </div>
         </div>
 
         <p className="text-center text-xs text-slate-500 mt-6">

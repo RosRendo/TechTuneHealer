@@ -46,11 +46,6 @@ export default function ProviderLoginPage() {
     }
   };
 
-  const autofillProvider = () => {
-    setEmail("sokha@test.com");
-    setPassword("password123");
-  };
-
   return (
     <div className="min-h-screen bg-[#F8FAFC] flex flex-col justify-between p-6 sm:p-10 antialiased selection:bg-slate-200">
       {/* Top Navbar */}
@@ -113,18 +108,6 @@ export default function ProviderLoginPage() {
               {loading ? "Signing in..." : "Continue"}
             </button>
           </form>
-
-          {/* Autofill Demo */}
-          <div className="mt-5 pt-4 border-t border-slate-100 flex items-center justify-between text-xs">
-            <span className="text-slate-400">Demo account:</span>
-            <button
-              type="button"
-              onClick={autofillProvider}
-              className="font-medium text-blue-600 hover:text-blue-700 hover:underline cursor-pointer"
-            >
-              Autofill credentials
-            </button>
-          </div>
         </div>
 
         <p className="text-center text-xs text-slate-500 mt-6">

@@ -153,11 +153,42 @@ export default function ProviderDashboardPage() {
   const [replyModalReview, setReplyModalReview] = useState<ReviewItem | null>(null);
   const [replyInput, setReplyInput] = useState("");
 
-  const [schedule] = useState<DaySchedule[]>(DEFAULT_WEEKLY_SCHEDULE);
+  const [schedule, setSchedule] = useState<DaySchedule[]>(DEFAULT_WEEKLY_SCHEDULE);
   const [payoutModalOpen, setPayoutModalOpen] = useState(false);
   const [payoutForm, setPayoutForm] = useState({ amount: "450.00", accountNumber: "001 892 411", accountName: "SPEEDY AUTO FIX CO LTD" });
 
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  // Settlements history from the real payout ledger (server PayoutRequest rows)
+  const [payoutHistory, setPayoutHistory] = useState<
+    { id: string; date: string; amount: number; destination: string; status: string }[]
+  >([]);
+  const [payoutSubmitting, setPayoutSubmitting] = useState(false);
+
+  const fetchPayoutHistory = useCallback(async (token: string) => {
+    const baseUrl = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000").replace(/\/+$/, "");
+    try {
+      const res = await fetch(`${baseUrl}/providers/me/payouts`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        const rows: any[] = await res.json();
+        setPayoutHistory(
+          rows.map((p) => ({
+            id: `PO-${p.id.slice(-6).toUpperCase()}`,
+            date: new Date(p.createdAt).toLocaleDateString(),
+            amount: Number(p.amount) || 0,
+            destination: `${p.method} KHQR disbursement`,
+            status: p.status.charAt(0) + p.status.slice(1).toLowerCase(),
+          }))
+        );
+      }
+    } catch (e) {
+      console.error("Error loading payout history:", e);
+    }
+  }, []);
+
+  const initialsPayoutDone = useRef(false);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -205,6 +236,25 @@ export default function ProviderDashboardPage() {
         if (meData.approvalStatus) {
           setApprovalStatus(meData.approvalStatus);
         }
+        if (meData.workingHours && typeof meData.workingHours === "object") {
+          const dayKey: Record<string, string> = {
+            monday: "Monday", tuesday: "Tuesday", wednesday: "Wednesday",
+            thursday: "Thursday", friday: "Friday", saturday: "Saturday", sunday: "Sunday",
+          };
+          setSchedule((prev) =>
+            prev.map((d) => {
+              const key = Object.entries(dayKey).find(([, label]) => label === d.day)?.[0];
+              const serverDay = key ? (meData.workingHours as Record<string, any>)[key] : null;
+              if (!serverDay) return d;
+              return {
+                ...d,
+                isOpen: Boolean(serverDay.isOpen),
+                openTime: serverDay.openTime || d.openTime,
+                closeTime: serverDay.closeTime || d.closeTime,
+              };
+            })
+          );
+        }
         if (Array.isArray(meData.services)) {
           const mapped: ServiceItem[] = meData.services.map((s: any) => ({
             id: s.id,
@@ -249,31 +299,8 @@ export default function ProviderDashboardPage() {
   }, [selectedBookingId]);
 
   useEffect(() => {
-    let token = localStorage.getItem("provider_token");
-    let userStr = localStorage.getItem("provider_user");
-
-    const searchParams = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
-    const isDemo = searchParams?.get("demo") === "true";
-
-    if ((!token || !userStr) && isDemo) {
-      const baseUrl = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000").replace(/\/+$/, "");
-      fetch(`${baseUrl}/auth/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: "sokha@test.com", password: "password123" }),
-      })
-        .then((res) => res.json())
-        .then((data) => {
-          if (data.token && data.user) {
-            localStorage.setItem("provider_token", data.token);
-            localStorage.setItem("provider_user", JSON.stringify(data.user));
-            setProviderUser(data.user);
-            fetchProviderData(data.token);
-          }
-        })
-        .catch(() => {});
-      return;
-    }
+    const token = localStorage.getItem("provider_token");
+    const userStr = localStorage.getItem("provider_user");
 
     if (!token || !userStr) {
       router.push("/provider/login");
@@ -284,10 +311,14 @@ export default function ProviderDashboardPage() {
       const u = JSON.parse(userStr);
       setProviderUser(u);
       fetchProviderData(token);
+      if (!initialsPayoutDone.current) {
+        initialsPayoutDone.current = true;
+        fetchPayoutHistory(token);
+      }
     } catch {
       router.push("/provider/login");
     }
-  }, [router, fetchProviderData]);
+  }, [router, fetchProviderData, fetchPayoutHistory]);
 
   // Fetch Chat Messages
   const fetchChatMessages = useCallback(async (bookingId: string) => {
@@ -455,7 +486,19 @@ export default function ProviderDashboardPage() {
 
   const platformFee = grossEarnings * 0.1;
   const netEarnings = grossEarnings * 0.9;
-  const availableBalance = netEarnings;
+  // Available = net earnings minus every payout not rejected (matches server balance logic)
+  const pendingPayoutTotal = useMemo(
+    () =>
+      payoutHistory
+        // server ledger rows carry only status labels: Pending/Approved/Paid count,
+        // Rejected returns to the balance
+        .reduce((sum, p) => {
+          const s = p.status.toLowerCase();
+          return ["pending", "approved", "paid"].includes(s) ? sum + p.amount : sum;
+        }, 0),
+    [payoutHistory]
+  );
+  const availableBalance = Math.max(0, netEarnings - pendingPayoutTotal);
 
   // Dynamic Attention Items computed from real database bookings
   const attentionItems = useMemo(() => {
@@ -805,16 +848,7 @@ export default function ProviderDashboardPage() {
     },
   ], [categoryDistribution]);
 
-  // Settlements history derived from completed bookings
-  const payoutHistory = useMemo(() => {
-    return completedBookings.map((b) => ({
-      id: `PAY-${b.id.slice(-6).toUpperCase()}`,
-      date: new Date(b.createdAt).toLocaleDateString(),
-      amount: Math.round(((Number(b.estimatedPrice ?? b.estimatedCost) || 35) * 0.9) * 100) / 100,
-      destination: "ABA Bank KHQR (001 892 411)",
-      status: "Settled",
-    }));
-  }, [completedBookings]);
+  // Payout ledger state lives with the other core state (declared above)
 
   if (loading) {
     return (
@@ -1098,7 +1132,7 @@ export default function ProviderDashboardPage() {
             <div className="relative">
               <button
                 onClick={() => setCreateDropdownOpen((prev) => !prev)}
-                className="bg-[#2A5AF0] hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-xs font-semibold flex items-center gap-2 shadow-xs transition cursor-pointer"
+                className="bg-[#2A65F0] hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-xs font-semibold flex items-center gap-2 shadow-xs transition cursor-pointer"
               >
                 <span>Create</span>
                 <span className="text-[10px]">▼</span>
@@ -1156,7 +1190,7 @@ export default function ProviderDashboardPage() {
                 onClick={() => setActiveView("overview")}
                 className={`text-xs font-medium pb-2 -mb-2 transition relative cursor-pointer ${
                   activeView === "overview"
-                    ? "text-slate-900 font-bold after:content-[''] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[2px] after:bg-[#2A5AF0]"
+                    ? "text-slate-900 font-bold after:content-[''] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[2px] after:bg-[#2A65F0]"
                     : "text-slate-400 hover:text-slate-700"
                 }`}
               >
@@ -1167,7 +1201,7 @@ export default function ProviderDashboardPage() {
                 onClick={() => setActiveView("dispatches")}
                 className={`text-xs font-medium pb-2 -mb-2 transition relative cursor-pointer ${
                   activeView === "dispatches"
-                    ? "text-slate-900 font-bold after:content-[''] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[2px] after:bg-[#2A5AF0]"
+                    ? "text-slate-900 font-bold after:content-[''] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[2px] after:bg-[#2A65F0]"
                     : "text-slate-400 hover:text-slate-700"
                 }`}
               >
@@ -1178,7 +1212,7 @@ export default function ProviderDashboardPage() {
                 onClick={() => setActiveView("bays")}
                 className={`text-xs font-medium pb-2 -mb-2 transition relative cursor-pointer ${
                   activeView === "bays"
-                    ? "text-slate-900 font-bold after:content-[''] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[2px] after:bg-[#2A5AF0]"
+                    ? "text-slate-900 font-bold after:content-[''] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[2px] after:bg-[#2A65F0]"
                     : "text-slate-400 hover:text-slate-700"
                 }`}
               >
@@ -1189,7 +1223,7 @@ export default function ProviderDashboardPage() {
                 onClick={() => setActiveView("services")}
                 className={`text-xs font-medium pb-2 -mb-2 transition relative cursor-pointer ${
                   activeView === "services"
-                    ? "text-slate-900 font-bold after:content-[''] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[2px] after:bg-[#2A5AF0]"
+                    ? "text-slate-900 font-bold after:content-[''] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[2px] after:bg-[#2A65F0]"
                     : "text-slate-400 hover:text-slate-700"
                 }`}
               >
@@ -1200,7 +1234,7 @@ export default function ProviderDashboardPage() {
                 onClick={() => setActiveView("settlements")}
                 className={`text-xs font-medium pb-2 -mb-2 transition relative cursor-pointer ${
                   activeView === "settlements"
-                    ? "text-slate-900 font-bold after:content-[''] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[2px] after:bg-[#2A5AF0]"
+                    ? "text-slate-900 font-bold after:content-[''] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[2px] after:bg-[#2A65F0]"
                     : "text-slate-400 hover:text-slate-700"
                 }`}
               >
@@ -2147,7 +2181,52 @@ export default function ProviderDashboardPage() {
                 </div>
 
                 <button
-                  onClick={() => showToast("Settings saved successfully")}
+                  onClick={async () => {
+                    const token = localStorage.getItem("provider_token");
+                    const baseUrl = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000").replace(/\/+$/, "");
+                    try {
+                      const labelKey: Record<string, string> = {
+                        Monday: "monday", Tuesday: "tuesday", Wednesday: "wednesday",
+                        Thursday: "thursday", Friday: "friday", Saturday: "saturday", Sunday: "sunday",
+                      };
+                      const workingHours: Record<string, unknown> = {};
+                      for (const d of schedule) {
+                        workingHours[labelKey[d.day]] = {
+                          isOpen: d.isOpen,
+                          openTime: d.openTime,
+                          closeTime: d.closeTime,
+                        };
+                      }
+
+                      const [profileRes, hoursRes] = await Promise.all([
+                        fetch(`${baseUrl}/providers/me`, {
+                          method: "PATCH",
+                          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+                          body: JSON.stringify({
+                            businessName: workshopProfile.businessName,
+                            address: workshopProfile.address,
+                            phone: workshopProfile.phone,
+                            description: workshopProfile.description,
+                          }),
+                        }),
+                        fetch(`${baseUrl}/providers/me/hours`, {
+                          method: "PATCH",
+                          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+                          body: JSON.stringify({ workingHours }),
+                        }),
+                      ]);
+
+                      if (!profileRes.ok || !hoursRes.ok) {
+                        const err = await (profileRes.ok ? hoursRes : profileRes).json().catch(() => null);
+                        showToast(err?.message || "Could not save settings");
+                        return;
+                      }
+                      showToast("Settings saved — profile and weekly hours persisted");
+                    } catch (e) {
+                      console.error(e);
+                      showToast("Could not save settings. Check your connection.");
+                    }
+                  }}
                   className="px-4 py-2 rounded-lg bg-slate-900 text-white text-xs font-semibold hover:bg-slate-800 transition cursor-pointer"
                 >
                   Save Settings
@@ -2246,9 +2325,65 @@ export default function ProviderDashboardPage() {
               </button>
               <button
                 type="button"
-                onClick={() => {
-                  setServiceModalOpen(false);
-                  showToast("Service saved");
+                onClick={async () => {
+                  if (!serviceForm.name.trim() || serviceForm.price === "") {
+                    showToast("Service name and price are required");
+                    return;
+                  }
+                  const token = localStorage.getItem("provider_token");
+                  const baseUrl = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000").replace(/\/+$/, "");
+                  try {
+                    const body = JSON.stringify({
+                      name: serviceForm.name.trim(),
+                      description: serviceForm.description.trim(),
+                      category: serviceForm.category,
+                      price: Number(serviceForm.price),
+                      durationMinutes: Number(serviceForm.durationMinutes) || 45,
+                      isActive: true,
+                    });
+                    const res = await fetch(
+                      editingService
+                        ? `${baseUrl}/providers/me/services/${editingService.id}`
+                        : `${baseUrl}/providers/me/services`,
+                      {
+                        method: editingService ? "PUT" : "POST",
+                        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+                        body,
+                      }
+                    );
+                    if (!res.ok) {
+                      const err = await res.json().catch(() => null);
+                      showToast(err?.message || "Could not save service");
+                      return;
+                    }
+                    const saved = await res.json();
+                    setServices((prev) => {
+                      if (editingService) {
+                        return prev.map((s) =>
+                          s.id === editingService.id
+                            ? { ...s, ...saved, category: serviceForm.category, durationMinutes: Number(serviceForm.durationMinutes) || 45 }
+                            : s
+                        );
+                      }
+                      return [
+                        ...prev,
+                        {
+                          id: saved.id,
+                          name: saved.name,
+                          category: serviceForm.category,
+                          description: saved.description || "",
+                          price: Number(saved.price) || Number(serviceForm.price),
+                          durationMinutes: Number(serviceForm.durationMinutes) || 45,
+                          isActive: true,
+                        },
+                      ];
+                    });
+                    setServiceModalOpen(false);
+                    showToast(editingService ? "Service updated" : "Service created");
+                  } catch (e) {
+                    console.error(e);
+                    showToast("Could not save service. Check your connection.");
+                  }
                 }}
                 className="px-4 py-1.5 rounded-lg bg-slate-900 text-white text-xs font-medium cursor-pointer"
               >
@@ -2296,13 +2431,49 @@ export default function ProviderDashboardPage() {
               </button>
               <button
                 type="button"
-                onClick={() => {
-                  setPayoutModalOpen(false);
-                  showToast("Payout requested successfully");
+                onClick={async () => {
+                  const amt = Number(payoutForm.amount);
+                  if (!Number.isFinite(amt) || amt <= 0) {
+                    showToast("Enter a valid payout amount");
+                    return;
+                  }
+                  setPayoutSubmitting(true);
+                  const token = localStorage.getItem("provider_token");
+                  const baseUrl = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000").replace(/\/+$/, "");
+                  try {
+                    const res = await fetch(`${baseUrl}/providers/me/payouts`, {
+                      method: "POST",
+                      headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${token}`,
+                      },
+                      body: JSON.stringify({
+                        amount: amt,
+                        method: "KHQR",
+                        note: payoutForm.accountNumber
+                          ? `ABA card ${payoutForm.accountNumber} — ${payoutForm.accountName}`
+                          : payoutForm.accountName,
+                      }),
+                    });
+                    if (!res.ok) {
+                      const err = await res.json().catch(() => null);
+                      showToast(err?.message || "Payout request failed");
+                      return;
+                    }
+                    setPayoutModalOpen(false);
+                    showToast("Payout requested — pending admin approval");
+                    if (token) fetchPayoutHistory(token);
+                  } catch (e) {
+                    console.error(e);
+                    showToast("Payout request failed. Check your connection.");
+                  } finally {
+                    setPayoutSubmitting(false);
+                  }
                 }}
-                className="px-4 py-1.5 rounded-lg bg-emerald-700 text-white text-xs font-medium cursor-pointer"
+                disabled={payoutSubmitting}
+                className="px-4 py-1.5 rounded-lg bg-emerald-700 text-white text-xs font-medium cursor-pointer disabled:opacity-50"
               >
-                Confirm Payout
+                {payoutSubmitting ? "Submitting…" : "Confirm Payout"}
               </button>
             </div>
           </div>
@@ -2333,9 +2504,38 @@ export default function ProviderDashboardPage() {
               </button>
               <button
                 type="button"
-                onClick={() => {
-                  setReplyModalReview(null);
-                  showToast("Reply published");
+                onClick={async () => {
+                  if (!replyModalReview) return;
+                  const reply = replyInput.trim();
+                  if (!reply) {
+                    showToast("Write a reply first");
+                    return;
+                  }
+                  const token = localStorage.getItem("provider_token");
+                  const baseUrl = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000").replace(/\/+$/, "");
+                  try {
+                    const res = await fetch(`${baseUrl}/reviews/${replyModalReview.id}/reply`, {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+                      body: JSON.stringify({ reply }),
+                    });
+                    if (!res.ok) {
+                      const err = await res.json().catch(() => null);
+                      showToast(err?.message || "Could not publish reply");
+                      return;
+                    }
+                    setReviews((prev) =>
+                      prev.map((r) =>
+                        r.id === replyModalReview.id ? { ...r, reply: { text: reply, repliedAt: new Date().toISOString() } } : r
+                      )
+                    );
+                    setReplyModalReview(null);
+                    setReplyInput("");
+                    showToast("Reply published");
+                  } catch (e) {
+                    console.error(e);
+                    showToast("Could not publish reply. Check your connection.");
+                  }
                 }}
                 className="px-4 py-1.5 rounded-lg bg-slate-900 text-white text-xs font-medium cursor-pointer"
               >

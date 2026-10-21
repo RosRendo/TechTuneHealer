@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import api from "@/lib/api";
+import { bookingStatusBadge } from "@/lib/badges";
 
 interface Booking {
   id: string;
@@ -24,13 +25,11 @@ const STATUS_TABS = [
   { key: "CANCELLED", label: "Cancelled" },
 ];
 
-const statusBadgeStyle: Record<string, string> = {
-  PENDING:     "bg-amber-50 text-amber-800 border-amber-200",
-  ACCEPTED:    "bg-indigo-50 text-indigo-800 border-indigo-200",
-  IN_PROGRESS: "bg-blue-50 text-blue-800 border-blue-200",
-  COMPLETED:   "bg-emerald-50 text-emerald-800 border-emerald-200",
-  CANCELLED:   "bg-slate-100 text-slate-600 border-slate-200",
-  REJECTED:    "bg-slate-100 text-slate-600 border-slate-200",
+const statusBadgeStyle = bookingStatusBadge;
+
+// Admin lifecycle overrides, grouped per current state
+const ADMIN_STATUS_ACTIONS: Record<string, { status: string; label: string; danger?: boolean }[]> = {
+  default: [{ status: "CANCELLED", label: "Cancel", danger: true }],
 };
 
 export default function BookingsPage() {
@@ -40,7 +39,14 @@ export default function BookingsPage() {
   const [activeTab, setActiveTab] = useState("all");
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
+  const [actingId, setActingId] = useState<string | null>(null);
+  const [toast, setToast] = useState<string | null>(null);
   const limit = 20;
+
+  const showToast = (msg: string) => {
+    setToast(msg);
+    setTimeout(() => setToast(null), 3000);
+  };
 
   const fetchBookings = useCallback(async () => {
     setLoading(true);
@@ -61,10 +67,50 @@ export default function BookingsPage() {
     fetchBookings();
   }, [fetchBookings]);
 
+  const handleStatusChange = async (bookingId: string, status: string) => {
+    setActingId(bookingId);
+    try {
+      await api.patch(`/admin/bookings/${bookingId}/status`, { status });
+      showToast(`Dispatch updated to ${status.replace("_", " ").toLowerCase()}`);
+      fetchBookings();
+    } catch (e) {
+      console.error(e);
+      showToast("Could not update dispatch status");
+    } finally {
+      setActingId(null);
+    }
+  };
+
+  const availableActions = (b: Booking) => {
+    if (b.status === "CANCELLED" || b.status === "COMPLETED") return [];
+    if (b.status === "PENDING")
+      return [
+        { status: "ACCEPTED", label: "Force Accept" },
+        { status: "CANCELLED", label: "Cancel", danger: true },
+      ];
+    if (b.status === "ACCEPTED")
+      return [
+        { status: "ARRIVED", label: "Mark Arrived" },
+        { status: "CANCELLED", label: "Cancel", danger: true },
+      ];
+    if (b.status === "ARRIVED")
+      return [{ status: "IN_PROGRESS", label: "Start Repair" }];
+    if (b.status === "IN_PROGRESS")
+      return [{ status: "COMPLETED", label: "Complete" }];
+    return ADMIN_STATUS_ACTIONS.default;
+  };
+
   const totalPages = Math.ceil(total / limit) || 1;
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
+      {toast && (
+        <div className="fixed bottom-6 right-6 z-50 bg-slate-900 text-white px-4 py-2.5 rounded shadow-xl text-xs font-medium flex items-center gap-2 animate-in fade-in duration-200">
+          <span className="w-2 h-2 rounded-full bg-emerald-400" />
+          <span>{toast}</span>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-2 border-b border-slate-200">
         <div>
@@ -125,18 +171,19 @@ export default function BookingsPage() {
                 <th className="px-6 py-3">Status</th>
                 <th className="px-6 py-3">Quote</th>
                 <th className="px-6 py-3 text-right">Created</th>
+                <th className="px-6 py-3 text-right">Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200 text-slate-700 text-xs">
               {loading ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-12 text-center text-slate-400">
+                  <td colSpan={8} className="px-6 py-12 text-center text-slate-400">
                     Loading dispatch records...
                   </td>
                 </tr>
               ) : bookings.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-10 text-center text-slate-400">
+                  <td colSpan={8} className="px-6 py-10 text-center text-slate-400">
                     No dispatches found under &ldquo;{activeTab}&rdquo;.
                   </td>
                 </tr>
@@ -179,6 +226,30 @@ export default function BookingsPage() {
                           day: "numeric",
                           year: "numeric",
                         })}
+                      </td>
+
+                      <td className="px-6 py-3.5 text-right whitespace-nowrap">
+                        {actingId === b.id ? (
+                          <span className="text-slate-400 text-xs">Working…</span>
+                        ) : availableActions(b).length === 0 ? (
+                          <span className="text-slate-300">—</span>
+                        ) : (
+                          <div className="flex justify-end gap-1.5">
+                            {availableActions(b).map((a) => (
+                              <button
+                                key={a.status}
+                                onClick={() => handleStatusChange(b.id, a.status)}
+                                className={`px-2.5 py-1 rounded text-[10px] font-bold transition cursor-pointer ${
+                                  a.danger
+                                    ? "bg-white border border-rose-300 text-rose-700 hover:bg-rose-50"
+                                    : "bg-slate-900 text-white hover:bg-slate-800"
+                                }`}
+                              >
+                                {a.label}
+                              </button>
+                            ))}
+                          </div>
+                        )}
                       </td>
                     </tr>
                   );

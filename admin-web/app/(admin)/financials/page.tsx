@@ -28,9 +28,31 @@ interface SettlementItem {
   status: string;
 }
 
+interface PayoutRequestItem {
+  id: string;
+  amount: number;
+  method: string;
+  status: string;
+  note?: string | null;
+  createdAt: string;
+  processedAt?: string | null;
+  provider: { businessName: string; address?: string | null; user?: { name?: string | null } };
+}
+
+const PAYOUT_TABS = [
+  { key: "PENDING", label: "Pending" },
+  { key: "APPROVED", label: "Approved" },
+  { key: "PAID", label: "Paid" },
+  { key: "REJECTED", label: "Rejected" },
+] as const;
+
 export default function FinancialsPage() {
   const [summary, setSummary] = useState<FinancialSummary | null>(null);
   const [settlements, setSettlements] = useState<SettlementItem[]>([]);
+  const [payouts, setPayouts] = useState<PayoutRequestItem[]>([]);
+  const [pendingCount, setPendingCount] = useState(0);
+  const [payoutStatus, setPayoutStatus] = useState<string>("PENDING");
+  const [actingPayoutId, setActingPayoutId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -49,21 +71,95 @@ export default function FinancialsPage() {
     } catch (err) {
       console.error("Error fetching financials:", err);
     } finally {
-      setLoading(false);
       setRefreshing(false);
     }
   }, []);
 
+  const fetchPayouts = useCallback(async () => {
+    try {
+      const res = await api.get("/admin/payouts", {
+        params: { status: payoutStatus, page: 1, limit: 50 },
+      });
+      setPayouts(res.data.payouts || []);
+      if (payoutStatus === "PENDING") setPendingCount(res.data.pendingCount ?? 0);
+      else if (payoutStatus === "all") setPendingCount(res.data.pendingCount ?? 0);
+    } catch (err) {
+      console.error("Error fetching payout requests:", err);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, [payoutStatus]);
+
   useEffect(() => {
     fetchFinancials();
-  }, [fetchFinancials]);
+    fetchPayouts();
+  }, [fetchFinancials, fetchPayouts]);
 
   const handleRefresh = () => {
     setRefreshing(true);
     fetchFinancials();
+    fetchPayouts();
+  };
+
+  const handlePayoutAction = async (payoutId: string, action: "approve" | "reject" | "mark_paid") => {
+    setActingPayoutId(payoutId);
+    try {
+      await api.patch(`/admin/payouts/${payoutId}`, { action });
+      showToast(
+        action === "approve"
+          ? "Payout request approved — queued for KHQR disbursement"
+          : action === "reject"
+          ? "Payout request rejected — amount returned to workshop balance"
+          : "Payout marked as paid"
+      );
+      fetchPayouts();
+      fetchFinancials();
+    } catch (err) {
+      console.error("Error processing payout:", err);
+      showToast("Could not process payout request");
+    } finally {
+      setActingPayoutId(null);
+    }
   };
 
   const handleExportReport = () => {
+    const rows = [
+      ["Settlement #", "Workshop", "Customer", "Service", "Gross", "Fee", "Net", "Date", "Status"],
+      ...filteredSettlements.map((s) => [
+        s.id,
+        s.workshopName,
+        s.customerName,
+        s.serviceType,
+        s.gross.toFixed(2),
+        s.fee.toFixed(2),
+        s.netPayout.toFixed(2),
+        new Date(s.date).toISOString().slice(0, 10),
+        s.status,
+      ]),
+      [],
+      ["Payout #"],
+      ["Payout Request", "Workshop", "Method", "Amount", "Status", "Requested", "Processed"],
+      ...payouts.map((p) => [
+        p.id,
+        p.provider?.businessName || "",
+        p.method,
+        p.amount.toFixed(2),
+        p.status,
+        new Date(p.createdAt).toISOString().slice(0, 10),
+        p.processedAt ? new Date(p.processedAt).toISOString().slice(0, 10) : "",
+      ]),
+    ];
+    const csv = rows
+      .map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(","))
+      .join("\n");
+    const blob = new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `techtune-financial-statement-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
     showToast("Financial Statement exported to CSV successfully");
   };
 
@@ -206,6 +302,137 @@ export default function FinancialsPage() {
           <p className="text-xs text-slate-500 leading-relaxed">
             All workshop disbursements support automated settlement to ABA Bank, Wing Bank, and ACLEDA Bank accounts.
           </p>
+        </div>
+      </div>
+
+      {/* ─── Workshop Withdrawal Requests (real payout approvals) ─────────── */}
+      <div className="bg-white border border-slate-200 rounded shadow-xs overflow-hidden">
+        <div className="p-4 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50/50">
+          <div>
+            <h3 className="font-bold text-slate-900 text-xs uppercase tracking-wider">
+              Workshop Withdrawal Requests
+              {pendingCount > 0 && (
+                <span className="ml-2 px-2 py-0.5 rounded bg-amber-100 text-amber-800 text-[10px] font-bold align-middle">
+                  {pendingCount} AWAITING REVIEW
+                </span>
+              )}
+            </h3>
+            <p className="text-xs text-slate-500 mt-0.5">
+              Approve, reject, or mark KHQR disbursements as paid. Rejected amounts return to the workshop&apos;s balance.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-1 p-1 rounded bg-slate-100">
+            {PAYOUT_TABS.map((t) => (
+              <button
+                key={t.key}
+                onClick={() => setPayoutStatus(t.key)}
+                className={`px-3 py-1 rounded text-[11px] font-semibold transition cursor-pointer ${
+                  payoutStatus === t.key
+                    ? "bg-white text-slate-900 shadow-2xs"
+                    : "text-slate-500 hover:text-slate-700"
+                }`}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-xs">
+            <thead>
+              <tr className="bg-slate-100/75 border-b border-slate-200 font-semibold text-slate-600 uppercase tracking-wider text-[11px]">
+                <th className="px-5 py-3">Request #</th>
+                <th className="px-5 py-3">Workshop</th>
+                <th className="px-5 py-3">Method</th>
+                <th className="px-5 py-3">Amount</th>
+                <th className="px-5 py-3">Requested</th>
+                <th className="px-5 py-3">Note</th>
+                <th className="px-5 py-3 text-right">Status</th>
+                <th className="px-5 py-3 text-right">Action</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-200 text-slate-700">
+              {payouts.length === 0 ? (
+                <tr>
+                  <td colSpan={8} className="px-5 py-10 text-center text-slate-400">
+                    No withdrawal requests in this state.
+                  </td>
+                </tr>
+              ) : (
+                payouts.map((p) => (
+                  <tr key={p.id} className="hover:bg-slate-50/75 transition-colors">
+                    <td className="px-5 py-3.5 font-mono font-bold text-slate-900 whitespace-nowrap">
+                      PO-{p.id.slice(-6).toUpperCase()}
+                    </td>
+                    <td className="px-5 py-3.5">
+                      <p className="font-bold text-slate-900">{p.provider?.businessName || "Unknown"}</p>
+                      <p className="text-slate-400 text-[11px]">{p.provider?.address || "Phnom Penh"}</p>
+                    </td>
+                    <td className="px-5 py-3.5 whitespace-nowrap">
+                      <span className="px-2 py-0.5 rounded bg-blue-50 text-blue-700 text-[10px] font-bold border border-blue-200">
+                        {p.method}
+                      </span>
+                    </td>
+                    <td className="px-5 py-3.5 font-mono font-bold text-slate-900 whitespace-nowrap">
+                      ${p.amount.toFixed(2)}
+                    </td>
+                    <td className="px-5 py-3.5 text-slate-500 font-mono whitespace-nowrap">
+                      {new Date(p.createdAt).toLocaleDateString()}
+                    </td>
+                    <td className="px-5 py-3.5 text-slate-500 max-w-[180px] truncate">
+                      {p.note || "—"}
+                    </td>
+                    <td className="px-5 py-3.5 text-right whitespace-nowrap">
+                      <span
+                        className={`px-2 py-0.5 rounded text-[10px] font-bold border ${
+                          p.status === "PENDING"
+                            ? "bg-amber-50 text-amber-800 border-amber-200"
+                            : p.status === "APPROVED"
+                            ? "bg-blue-50 text-blue-700 border-blue-200"
+                            : p.status === "PAID"
+                            ? "bg-emerald-50 text-emerald-800 border-emerald-200"
+                            : "bg-rose-50 text-rose-700 border-rose-200"
+                        }`}
+                      >
+                        {p.status}
+                      </span>
+                    </td>
+                    <td className="px-5 py-3.5 text-right whitespace-nowrap">
+                      {actingPayoutId === p.id ? (
+                        <span className="text-slate-400 text-[11px]">Working…</span>
+                      ) : p.status === "PENDING" ? (
+                        <div className="flex justify-end gap-1.5">
+                          <button
+                            onClick={() => handlePayoutAction(p.id, "approve")}
+                            className="px-2.5 py-1 rounded bg-emerald-600 text-white text-[10px] font-bold hover:bg-emerald-700 transition cursor-pointer"
+                          >
+                            Approve
+                          </button>
+                          <button
+                            onClick={() => handlePayoutAction(p.id, "reject")}
+                            className="px-2.5 py-1 rounded bg-white border border-rose-300 text-rose-700 text-[10px] font-bold hover:bg-rose-50 transition cursor-pointer"
+                          >
+                            Reject
+                          </button>
+                        </div>
+                      ) : p.status === "APPROVED" ? (
+                        <button
+                          onClick={() => handlePayoutAction(p.id, "mark_paid")}
+                          className="px-2.5 py-1 rounded bg-slate-900 text-white text-[10px] font-bold hover:bg-slate-800 transition cursor-pointer"
+                        >
+                          Mark Paid
+                        </button>
+                      ) : (
+                        <span className="text-slate-400 text-[11px]">—</span>
+                      )}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
 

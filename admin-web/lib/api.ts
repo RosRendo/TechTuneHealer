@@ -7,10 +7,11 @@ const api = axios.create({
   timeout: 10000,
 });
 
-// Attach JWT token from localStorage on every request
+// Attach JWT token from localStorage on every request (admin or provider)
 api.interceptors.request.use((config) => {
   if (typeof window !== "undefined") {
-    const token = localStorage.getItem("admin_token");
+    const token =
+      localStorage.getItem("admin_token") || localStorage.getItem("provider_token");
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -18,15 +19,19 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// Redirect to login on 401
+// Redirect to the correct login on 401/403
 api.interceptors.response.use(
   (res) => res,
   (error) => {
     if (error.response?.status === 401 || error.response?.status === 403) {
       if (typeof window !== "undefined") {
+        const path = window.location.pathname;
+        const onProviderPortal = path.startsWith("/provider");
         localStorage.removeItem("admin_token");
         localStorage.removeItem("admin_user");
-        window.location.href = "/";
+        localStorage.removeItem("provider_token");
+        localStorage.removeItem("provider_user");
+        window.location.href = onProviderPortal ? "/provider/login" : "/admin-login";
       }
     }
     return Promise.reject(error);
