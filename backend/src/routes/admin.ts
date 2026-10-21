@@ -12,6 +12,12 @@ router.use(requireRole("ADMIN"));
 // ─── GET /admin/metrics ────────────────────────────────────────────────────
 router.get("/metrics", async (req: Request, res: Response) => {
   try {
+    const daysRaw = parseInt(req.query.days as string);
+    const days = [1, 7, 30, 90].includes(daysRaw) ? daysRaw : null;
+    const dateFilter = days
+      ? { createdAt: { gte: new Date(Date.now() - days * 24 * 60 * 60 * 1000) } }
+      : undefined;
+
     const [
       totalUsers,
       activeProviders,
@@ -23,6 +29,7 @@ router.get("/metrics", async (req: Request, res: Response) => {
       allBookings,
       topProviders,
       approvedProvidersList,
+      pendingPayoutsAgg,
     ] = await Promise.all([
       prisma.user.count({ where: { role: "CUSTOMER" } }),
       prisma.serviceProvider.count(),
@@ -40,6 +47,7 @@ router.get("/metrics", async (req: Request, res: Response) => {
         },
       }),
       prisma.booking.findMany({
+        ...(dateFilter ? { where: dateFilter } : {}),
         orderBy: { createdAt: "desc" },
         select: {
           id: true,
@@ -66,6 +74,10 @@ router.get("/metrics", async (req: Request, res: Response) => {
           isEmergency: true,
           rating: true,
         },
+      }),
+      prisma.payoutRequest.findMany({
+        where: { status: "PENDING" },
+        select: { amount: true },
       }),
     ]);
 
@@ -335,12 +347,15 @@ router.get("/metrics", async (req: Request, res: Response) => {
         totalUsers,
         activeProviders,
         pendingProviders,
-        totalBookings,
+        totalBookings: dateFilter ? allBookings.length : totalBookings,
         totalOrders,
         totalRevenue: grossGmv,
         bayUtilization,
         resolutionRate,
         arrivalSlaMinutes: 11.4,
+        pendingPayoutCount: pendingPayoutsAgg.length,
+        pendingPayoutAmount:
+          Math.round(pendingPayoutsAgg.reduce((sum, p) => sum + p.amount, 0) * 100) / 100,
       },
       statusPipeline,
       weeklyPerformance,
@@ -571,6 +586,35 @@ router.get("/bookings", async (req: Request, res: Response) => {
   }
 });
 
+// ─── PATCH /admin/bookings/:id/status ──────────────────────────────────────
+// Admin override: force a booking into any lifecycle state (dispute
+// resolution, stuck dispatches, cancellations)
+const ADMIN_BOOKING_STATUSES = ["PENDING", "ACCEPTED", "ARRIVED", "IN_PROGRESS", "COMPLETED", "CANCELLED"];
+
+router.patch("/bookings/:id/status", async (req: Request, res: Response) => {
+  try {
+    const status = String(req.body?.status || "").toUpperCase();
+    if (!ADMIN_BOOKING_STATUSES.includes(status)) {
+      res.status(400).json({ message: `Invalid status. Allowed: ${ADMIN_BOOKING_STATUSES.join(", ")}` });
+      return;
+    }
+
+    const booking = await prisma.booking.update({
+      where: { id: req.params.id as string },
+      data: { status: status as never },
+      include: {
+        customer: { select: { name: true, email: true, phone: true } },
+        provider: { select: { businessName: true, address: true } },
+        vehicle: { select: { make: true, model: true, year: true, plateNumber: true, color: true } },
+      },
+    });
+    res.json(booking);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Error updating booking status" });
+  }
+});
+
 // ─── GET /admin/products (Auto Parts Inventory) ───────────────────────────
 router.get("/products", async (req: Request, res: Response) => {
   try {
@@ -669,7 +713,8 @@ router.patch("/products/:id", async (req: Request, res: Response) => {
 });
 
 // ─── DELETE /admin/products/:id ───────────────────────────────────────────
-router.delete("/admin/products/:id", async (req: Request, res: Response) => {
+// NOTE: router is mounted at /admin, so the effective path here is /admin/products/:id
+router.delete("/products/:id", async (req: Request, res: Response) => {
   try {
     await prisma.product.delete({ where: { id: req.params.id as string } });
     res.json({ success: true, message: "Product deleted" });
@@ -762,22 +807,89 @@ router.get("/financials", async (req: Request, res: Response) => {
         paidOrdersCount: paidOrders.length,
         activeWorkshopsCount: totalProvidersCount,
       },
-      recentSettlements: completedBookings.slice(0, 15).map((b) => ({
-        id: `STL-${b.id.slice(-6).toUpperCase()}`,
-        bookingId: b.id,
-        workshopName: b.provider.businessName,
-        customerName: b.customer.name,
-        serviceType: b.serviceType,
-        gross: 35.0,
-        fee: 3.5,
-        netPayout: 31.5,
-        date: b.createdAt,
-        status: "Settled",
-      })),
+      recentSettlements: completedBookings.slice(0, 15).map((b) => {
+        const gross = Math.round(Number(b.finalPrice ?? 35.0) * 100) / 100;
+        const fee = Math.round(gross * 0.1 * 100) / 100;
+        return {
+          id: `STL-${b.id.slice(-6).toUpperCase()}`,
+          bookingId: b.id,
+          workshopName: b.provider.businessName,
+          customerName: b.customer.name,
+          serviceType: b.serviceType,
+          gross,
+          fee,
+          netPayout: Math.round((gross - fee) * 100) / 100,
+          date: b.createdAt,
+          status: "Settled",
+        };
+      }),
     });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Error calculating network financials" });
+  }
+});
+
+// ─── GET /admin/payouts — provider withdrawal requests ────────────────────
+router.get("/payouts", async (req: Request, res: Response) => {
+  try {
+    const { status = "", search = "", page = "1", limit = "20" } = req.query as Record<string, string>;
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+
+    const where: any = {};
+    if (status && status !== "all") where.status = status.toUpperCase();
+    if (search) {
+      where.provider = { businessName: { contains: search } };
+    }
+
+    const [payouts, total, pendingCount] = await Promise.all([
+      prisma.payoutRequest.findMany({
+        where,
+        skip,
+        take: parseInt(limit),
+        orderBy: { createdAt: "desc" },
+        include: {
+          provider: { select: { businessName: true, address: true, user: { select: { name: true } } } },
+        },
+      }),
+      prisma.payoutRequest.count({ where }),
+      prisma.payoutRequest.count({ where: { status: "PENDING" } }),
+    ]);
+
+    res.json({ payouts, total, pendingCount, page: parseInt(page), limit: parseInt(limit) });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Error fetching payout requests" });
+  }
+});
+
+// ─── PATCH /admin/payouts/:id — approve / reject / mark paid ──────────────
+const PAYOUT_ACTIONS: Record<string, string> = {
+  approve: "APPROVED",
+  reject: "REJECTED",
+  mark_paid: "PAID",
+};
+
+router.patch("/payouts/:id", async (req: Request, res: Response) => {
+  try {
+    const action = String(req.body?.action || "");
+    const nextStatus = PAYOUT_ACTIONS[action];
+    if (!nextStatus) {
+      res.status(400).json({ message: "Invalid action. Allowed: approve, reject, mark_paid" });
+      return;
+    }
+
+    const payout = await prisma.payoutRequest.update({
+      where: { id: req.params.id as string },
+      data: { status: nextStatus, processedAt: new Date() },
+      include: {
+        provider: { select: { businessName: true, address: true, user: { select: { name: true } } } },
+      },
+    });
+    res.json(payout);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Error processing payout request" });
   }
 });
 

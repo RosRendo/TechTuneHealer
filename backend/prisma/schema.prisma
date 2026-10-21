@@ -137,6 +137,21 @@ model Booking {
   updatedAt     DateTime      @updatedAt
 
   review        Review?
+  chatMessages  ChatMessage[]
+}
+
+// Dispatch/support chat, persisted so conversations survive restarts
+model ChatMessage {
+  id         String   @id @default(uuid())
+  bookingId  String
+  booking    Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  senderId   String
+  senderName String
+  senderRole String?  // customer | provider | admin
+  text       String
+  createdAt  DateTime @default(now())
+
+  @@index([bookingId, createdAt])
 }
 
 model PayoutRequest {
