@@ -41,13 +41,25 @@ export function CartScreen() {
       const response = await axios.get(`${API_URL}/shop/cart`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setCart(response.data);
+      if (!response.data?.items?.length) {
+        // Empty server cart — show demo catalogue so the cart never looks broken
+        setCart(DEMO_CART);
+      } else {
+        setCart(response.data);
+      }
     } catch {
       setCart(DEMO_CART);
     } finally {
       setLoading(false);
     }
   };
+
+  // True when the cart rows are real server cart items (demo ids are '1','2',...
+  // plain numbers; server rows are uuids)
+  const isServerCart = useCallback(
+    () => Boolean(cart?.items?.length && typeof cart.items[0].id === 'string' && cart.items[0].id.includes('-')),
+    [cart]
+  );
 
   const updateQty = useCallback((itemId: string, delta: number) => {
     setCart((prev: any) => {
@@ -59,18 +71,47 @@ export function CartScreen() {
           .filter((i: any) => i.quantity > 0),
       };
     });
-  }, []);
+
+    // Persist quantity changes to the backend cart
+    const apply = async () => {
+      try {
+        const token = await AsyncStorage.getItem('authToken');
+        const nextQty = (cart?.items?.find((i: any) => i.id === itemId)?.quantity ?? 0) + delta;
+        if (nextQty <= 0) {
+          await axios.delete(`${API_URL}/shop/cart/items/${itemId}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+        } else {
+          await axios.patch(`${API_URL}/shop/cart/items/${itemId}`, { quantity: nextQty }, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+        }
+      } catch { /* offline — local change stays, server syncs next visit */ }
+    };
+    if (isServerCart()) apply();
+  }, [cart, isServerCart]);
 
   const removeItem = useCallback((itemId: string) => {
     Alert.alert('Remove item', 'Remove this item from your cart?', [
       { text: 'Cancel', style: 'cancel' },
       {
         text: 'Remove', style: 'destructive',
-        onPress: () =>
-          setCart((prev: any) => ({ ...prev, items: prev.items.filter((i: any) => i.id !== itemId) })),
+        onPress: () => {
+          setCart((prev: any) => ({ ...prev, items: prev.items.filter((i: any) => i.id !== itemId) }));
+          if (isServerCart()) {
+            (async () => {
+              try {
+                const token = await AsyncStorage.getItem('authToken');
+                await axios.delete(`${API_URL}/shop/cart/items/${itemId}`, {
+                  headers: { Authorization: `Bearer ${token}` },
+                });
+              } catch { /* offline — resync next visit */ }
+            })();
+          }
+        },
       },
     ]);
-  }, []);
+  }, [isServerCart]);
 
   const total = cart?.items?.reduce(
     (sum: number, i: any) => sum + i.product.price * i.quantity,

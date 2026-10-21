@@ -1,5 +1,5 @@
 // User Types
-export type UserRole = "customer" | "provider";
+export type UserRole = "customer" | "provider" | "admin";
 
 export interface User {
   id: string;
@@ -82,6 +82,7 @@ export type BookingStatus =
   | "pending"
   | "accepted"
   | "rejected"
+  | "arrived"
   | "in_progress"
   | "completed"
   | "cancelled";
@@ -93,6 +94,8 @@ export interface Booking {
   vehicleId: string;
   serviceIds: string[];
   status: BookingStatus;
+  paymentMethod?: string;
+  paymentRef?: string;
   scheduledDate: Date;
   estimatedPrice?: number;
   finalPrice?: number;

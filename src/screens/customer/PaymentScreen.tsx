@@ -13,12 +13,13 @@ import {
   Image,
   Modal,
   Linking,
+  Share,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { colors, spacing, fontSize, fontWeight, borderRadius, shadows } from '../../constants/theme';
+import { colors, spacing, borderRadius, shadows } from '../../constants/theme';
 import { AnimatedEntrance } from '../../components';
 import type { CustomerStackScreenProps } from '../../navigation/types';
 import { useBookingStore, useTranslation } from '../../store';
@@ -45,7 +46,7 @@ export function PaymentScreen() {
   const navigation = useNavigation<CustomerStackScreenProps<'Payment'>['navigation']>();
   const route = useRoute<CustomerStackScreenProps<'Payment'>['route']>();
   const { bookings, updateBookingStatus } = useBookingStore();
-  const { t, isKhmer } = useTranslation();
+  const { isKhmer } = useTranslation();
 
   // Safely extract parameters with fallbacks
   const params = (route.params as any) || {};
@@ -227,6 +228,29 @@ export function PaymentScreen() {
     return clean.replace(/(\d{4})(?=\d)/g, '$1 ');
   };
 
+  // Share the receipt anywhere the user wants (mail, Telegram, gallery note…)
+  const handleShareReceipt = () => {
+    const methodLabel =
+      method === 'khqr'
+        ? 'ABA PAY / Bakong KHQR'
+        : method === 'card'
+        ? `${cardBrand} card •••• ${cardNum.replace(/\s/g, '').slice(-4)}`
+        : 'Cash on Service';
+    const receiptText = [
+      `TechTune Healer — Official Receipt #${transactionId || 'N/A'}`,
+      invoiceDate ? `Date: ${invoiceDate}` : '',
+      `Total paid: $${finalTotal.toFixed(2)} (~៛${finalTotalKHR})`,
+      `Method: ${methodLabel}`,
+      items.length ? `Items: ${items.map((i) => `${i.name} x${i.quantity}`).join('; ')}` : '',
+      isKhmer
+        ? 'អរគុណដែលប្រើសេវាកម្ម TechTune Healer។'
+        : 'Thank you for choosing TechTune Healer.',
+    ]
+      .filter(Boolean)
+      .join('\n');
+    Share.share({ title: `Receipt ${transactionId}`, message: receiptText }).catch(() => {});
+  };
+
   // Format expiry MM/YY
   const formatExpiry = (text: string) => {
     const digits = text.replace(/\D/g, '').slice(0, 4);
@@ -361,16 +385,33 @@ export function PaymentScreen() {
       return;
     }
 
+  // Confirm the booking this payment serves: record method+ref server-side,
+  // then reflect the new lifecycle locally
   // Only confirm the booking this payment was opened for (passed explicitly)
   if (targetBookingId) {
-      try {
-        const currentBooking = bookings.find((b) => b.id === targetBookingId);
-        const nextStatus = currentBooking?.status === 'in_progress' ? 'completed' : 'accepted';
-        await updateBookingStatus(targetBookingId, nextStatus);
-      } catch (err) {
-        console.warn('Failed to update booking status from payment checkout:', err);
+    try {
+      const currentBooking = bookings.find((b) => b.id === targetBookingId);
+      const txnRef = `TXN-${Math.floor(1000000 + Math.random() * 9000000)}`;
+      setTransactionId(txnRef);
+      const recorded = await axios.post(
+        `${API_URL}/bookings/${targetBookingId}/pay`,
+        {
+          method,
+          paymentRef: txnRef,
+          amount: finalTotal,
+        },
+        { headers: { Authorization: `Bearer ${await AsyncStorage.getItem('authToken')}` } }
+      );
+      const newStatus = (recorded.data?.status || 'accepted') as 'accepted' | 'in_progress' | 'completed';
+      if (currentBooking?.status === 'in_progress' && newStatus === 'accepted') {
+        // keep the in-progress lifecycle intact — payment evidence recorded above
+      } else {
+        await updateBookingStatus(targetBookingId, newStatus);
       }
+    } catch (err) {
+      console.warn('Failed to record payment on the booking:', err);
     }
+  }
 
     // Simulate authentic financial gateway roundtrip
     await new Promise((r) => setTimeout(r, 1600));
@@ -536,20 +577,12 @@ export function PaymentScreen() {
 
           <TouchableOpacity
             style={styles.secondaryActionBtn}
-            onPress={() => {
-              Alert.alert(
-                isKhmer ? 'បានទាញយកវិក្កយបត្រ' : 'Receipt Downloaded',
-                isKhmer
-                  ? `វិក្កយបត្រផ្លូវការលេខ #${transactionId} ត្រូវបានរក្សាទុកក្នុងថតទាញយករបស់អ្នក។`
-                  : `Official Tax Invoice #${transactionId} has been saved to your downloads folder.`,
-                [{ text: isKhmer ? 'យល់ព្រម' : 'OK' }]
-              );
-            }}
+            onPress={handleShareReceipt}
             activeOpacity={0.8}
           >
             <Ionicons name="download-outline" size={18} color="#0F172A" />
             <Text style={styles.secondaryActionBtnText}>
-              {isKhmer ? 'ទាញយកវិក្កយបត្រ PDF' : 'Download PDF Receipt'}
+              {isKhmer ? 'ទាញយកវិក្កយបត្រ PDF' : 'Share / Save Receipt'}
             </Text>
           </TouchableOpacity>
 
@@ -899,11 +932,12 @@ export function PaymentScreen() {
                 <TouchableOpacity
                   style={styles.khqrActionBtn}
                   onPress={() => {
-                    Alert.alert(
-                      isKhmer ? 'បានរក្សាទុក KHQR ក្នុងរូបថត' : 'KHQR Saved to Photos',
-                      isKhmer ? 'វិក្កយបត្រ QR ផ្លូវការរបស់ Rendo Ros ត្រូវបានរក្សាទុកក្នុងអាល់ប៊ុមរូបថតរបស់អ្នក។ អ្នកអាចបើកកម្មវិធីធនាគារណាមួយនៅកម្ពុជាដើម្បីស្កេនទូទាត់។' : 'Rendo Ros official ABA KHQR payment slip has been saved to your photo album. Open any Cambodian banking app to scan and pay.',
-                      [{ text: 'OK' }]
-                    );
+                    Share.share({
+                      title: 'KHQR Payment Slip',
+                      message: isKhmer
+                        ? `បង់ប្រាក់ $${finalTotal.toFixed(2)} (~៛${finalTotalKHR}) ជូន RENDO ROS តាម ABA KHQR (ABA $007 971 932 / KHR $007 971 933)។`
+                        : `Pay $${finalTotal.toFixed(2)} (~៛${finalTotalKHR}) to RENDO ROS via ABA KHQR (ABA 007 971 932 / KHR 007 971 933). Save this slip and scan it with any Cambodian banking app.`,
+                    }).catch(() => {});
                   }}
                 >
                   <Ionicons name="image-outline" size={16} color="#0F172A" />

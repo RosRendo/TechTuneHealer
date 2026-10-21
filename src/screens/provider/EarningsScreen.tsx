@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect, useCallback } from "react";
 import {
   View,
   Text,
@@ -14,6 +14,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { colors, spacing, borderRadius, shadows } from "../../constants/theme";
 import { MockTransaction } from "../../data/mockProviderData";
 import { useBookingStore } from "../../store";
+import api from "../../services/api";
 import { AnimatedEntrance } from "../../components/AnimatedEntrance";
 
 type TimePeriod = "week" | "month" | "year";
@@ -50,6 +51,32 @@ export default function EarningsScreen() {
 
     return [...withdrawals, ...bookingTx];
   }, [bookings, withdrawals]);
+
+  // Server-side payout ledger (PayoutRequest rows)
+  const loadPayouts = useCallback(() => {
+    api.providers
+      .getPayouts()
+      .then((payouts) => {
+        setWithdrawals(
+          (Array.isArray(payouts) ? payouts : []).map((p: any) => ({
+            id: p.id,
+            type: "withdrawal",
+            description: `Bakong ${p.method || "KHQR"} Settlement Transfer`,
+            amount: Number(p.amount),
+            feeAmount: 0,
+            netAmount: Number(p.amount),
+            paymentMethod: p.method || "KHQR",
+            date: p.createdAt ? String(p.createdAt).split("T")[0] : "Today",
+            status: String(p.status || "PENDING").toLowerCase() as MockTransaction["status"],
+          }))
+        );
+      })
+      .catch(() => { /* keep local list on failure */ });
+  }, []);
+
+  useEffect(() => {
+    loadPayouts();
+  }, [loadPayouts]);
 
   // Weekly revenue chart (Mon–Sun) from real/seed bookings
   const weeklyRevenue = useMemo(() => {
@@ -130,28 +157,24 @@ export default function EarningsScreen() {
     }
 
     setIsProcessingWithdraw(true);
-    setTimeout(() => {
-      setIsProcessingWithdraw(false);
-      setWithdrawModalVisible(false);
-
-      const newTx: MockTransaction = {
-        id: `tx-wd-${Date.now()}`,
-        type: "withdrawal",
-        description: "Bakong ABA KHQR Settlement Transfer",
-        amount: amt,
-        feeAmount: 0,
-        netAmount: amt,
-        paymentMethod: "KHQR",
-        date: new Date().toISOString().split("T")[0],
-        status: "completed",
-      };
-
-      setWithdrawals((prev) => [newTx, ...prev]);
-      Alert.alert(
-        "Withdrawal Complete",
-        `$${amt.toFixed(2)} has been successfully transferred to your linked ABA account via Bakong!`
-      );
-    }, 800);
+    api.providers
+      .requestPayout({ amount: amt, method: "KHQR" })
+      .then(() => {
+        setIsProcessingWithdraw(false);
+        setWithdrawModalVisible(false);
+        loadPayouts();
+        Alert.alert(
+          "Withdrawal Requested",
+          `$${amt.toFixed(2)} has been submitted for settlement via Bakong KHQR. It appears as PENDING until the platform transfers it to your linked ABA account.`
+        );
+      })
+      .catch((err: any) => {
+        setIsProcessingWithdraw(false);
+        Alert.alert(
+          "Withdrawal Failed",
+          err?.response?.data?.message || "Could not submit the payout request. Please try again."
+        );
+      });
   };
 
   return (

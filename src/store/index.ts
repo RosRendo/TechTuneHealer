@@ -14,7 +14,7 @@ interface AuthState {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  userRole: "customer" | "provider" | null; // Store selected role
+  userRole: "customer" | "provider" | "admin" | null; // Store selected role
   isDutyOnline: boolean;
   dispatchRadiusKm: number;
   isEmergencyOnCall: boolean;

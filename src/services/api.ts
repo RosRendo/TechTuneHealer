@@ -133,6 +133,51 @@ export const providersApi = {
       method: 'PATCH',
       body: JSON.stringify(data),
     }),
+
+  updateHours: (workingHours: Record<string, { isOpen: boolean; openTime?: string; closeTime?: string }>) =>
+    fetchWithAuth<ServiceProvider>('/providers/me/hours', {
+      method: 'PATCH',
+      body: JSON.stringify({ workingHours }),
+    }),
+
+  createService: (data: {
+    name: string;
+    description?: string;
+    price: number;
+    category?: string;
+    durationMinutes?: number;
+    isActive?: boolean;
+  }) =>
+    fetchWithAuth<any>('/providers/me/services', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  updateService: (serviceId: string, data: {
+    name?: string;
+    description?: string;
+    price?: number;
+    category?: string;
+    durationMinutes?: number;
+    isActive?: boolean;
+  }) =>
+    fetchWithAuth<any>(`/providers/me/services/${serviceId}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    }),
+
+  deleteService: (serviceId: string) =>
+    fetchWithAuth<{ success: boolean }>(`/providers/me/services/${serviceId}`, {
+      method: 'DELETE',
+    }),
+
+  getPayouts: () => fetchWithAuth<any[]>('/providers/me/payouts'),
+
+  requestPayout: (data: { amount: number; method?: string; note?: string }) =>
+    fetchWithAuth<any>('/providers/me/payouts', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
 };
 
 // Bookings API
@@ -170,6 +215,12 @@ export const bookingsApi = {
     fetchWithAuth<Booking>(`/bookings/${id}/status`, {
       method: 'PUT',
       body: JSON.stringify({ status }),
+    }),
+
+  pay: (id: string, data: { method?: string; paymentRef?: string; amount?: number }) =>
+    fetchWithAuth<Booking>(`/bookings/${id}/pay`, {
+      method: 'POST',
+      body: JSON.stringify(data),
     }),
 };
 
@@ -279,6 +330,37 @@ export const chatApi = {
     ),
 };
 
+// Cart API (shop e-commerce)
+export const cartApi = {
+  get: () => fetchWithAuth<any>('/shop/cart'),
+
+  addItem: (productId: string, quantity: number) =>
+    fetchWithAuth<any>('/shop/cart/items', {
+      method: 'POST',
+      body: JSON.stringify({ productId, quantity }),
+    }),
+
+  setItemQuantity: (itemId: string, quantity: number) =>
+    fetchWithAuth<any>(`/shop/cart/items/${itemId}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ quantity }),
+    }),
+
+  removeItem: (itemId: string) =>
+    fetchWithAuth<any>(`/shop/cart/items/${itemId}`, {
+      method: 'DELETE',
+    }),
+
+  checkout: () => fetchWithAuth<any>('/shop/orders/checkout', { method: 'POST', body: JSON.stringify({}) }),
+};
+
+// Shop products API
+export const shopApi = {
+  getProducts: () => fetchWithAuth<any[]>('/shop/products'),
+
+  getById: (id: string) => fetchWithAuth<any>(`/shop/products/${id}`),
+};
+
 export default {
   auth: authApi,
   providers: providersApi,
@@ -288,4 +370,6 @@ export default {
   diagnostics: diagnosticsApi,
   notifications: notificationsApi,
   chat: chatApi,
+  cart: cartApi,
+  shop: shopApi,
 };

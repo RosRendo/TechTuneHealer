@@ -175,7 +175,7 @@ export function MechanicTrackingScreen() {
     };
   }, [coords, initialLivePos, defaultProviderPos, currentBooking, getDestinationCoords]);
 
-  // Ã¢â€â‚¬Ã¢â€â‚¬ Auto-fit map viewport to frame both specialist and customer Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+  // -â‚¬-â‚¬ Auto-fit map viewport to frame both specialist and customer -â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬
   const fitMapBounds = useCallback(() => {
     if (!mapRef.current) return;
     const currentLoc = coords || defaultProviderPos;
@@ -194,7 +194,7 @@ export function MechanicTrackingScreen() {
     });
   }, [coords, defaultProviderPos, currentBooking, getDestinationCoords, routeCoords]);
 
-  // Ã¢â€â‚¬Ã¢â€â‚¬ Connect socket on mount Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+  // -â‚¬-â‚¬ Connect socket on mount -â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬
   useEffect(() => {
     let active = true;
 
@@ -205,7 +205,7 @@ export function MechanicTrackingScreen() {
       const socket = io(WS_URL, { auth: { token } });
       socketRef.current = socket;
 
-      socket.on('connect', () => console.log('Ã°Å¸â€Å’ Socket connected'));
+      socket.on('connect', () => console.log('â€Å’ Socket connected'));
       socket.on('connect_error', (err) => console.warn('Socket connection failed:', err.message));
     })();
 
@@ -216,21 +216,21 @@ export function MechanicTrackingScreen() {
     };
   }, []);
 
-  // Ã¢â€â‚¬Ã¢â€â‚¬ Handle app background / foreground Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+  // -â‚¬-â‚¬ Handle app background / foreground -â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬
   useEffect(() => {
     const sub = AppState.addEventListener('change', nextState => {
       if (
         appStateRef.current.match(/inactive|background/) &&
         nextState === 'active'
       ) {
-        // App came to foreground Ã¢â‚¬â€œ tracking continues silently
+        // App came to foreground – tracking continues silently
       }
       appStateRef.current = nextState;
     });
     return () => sub.remove();
   }, []);
 
-  // Ã¢â€â‚¬Ã¢â€â‚¬ Sync destination and route when currentBooking loads or changes Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+  // -â‚¬-â‚¬ Sync destination and route when currentBooking loads or changes -â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬
   useEffect(() => {
     const dest = getDestinationCoords(currentBooking);
     customerCoordsRef.current = dest;
@@ -285,7 +285,7 @@ export function MechanicTrackingScreen() {
   }, [currentBooking, getDestinationCoords, defaultProviderPos, initialLivePos, setStoreLocation]);
 
 
-  // Ã¢â€â‚¬Ã¢â€â‚¬ Fetch OSRM Route with HTTPS & Reliable Waypoint Fallback Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+  // -â‚¬-â‚¬ Fetch OSRM Route with HTTPS & Reliable Waypoint Fallback -â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬
   const fetchRoute = async (start: { lat: number; lng: number }, end: { lat: number; lng: number }) => {
     try {
       const response = await fetch(
@@ -318,7 +318,7 @@ export function MechanicTrackingScreen() {
     setTimeout(fitMapBounds, 400);
   };
 
-  // Ã¢â€â‚¬Ã¢â€â‚¬ Start tracking (Real GPS & Simulation) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+  // -â‚¬-â‚¬ Start tracking (Real GPS & Simulation) -â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬
   const startTracking = useCallback(async () => {
     setIsTracking(true);
     setStatus('tracking');
@@ -409,7 +409,7 @@ export function MechanicTrackingScreen() {
     } as any;
   }, [bookingId, coords, liveGpsCoords, initialLivePos, defaultProviderPos, currentBooking, getDestinationCoords, updateBookingStatus]);
 
-  // Ã¢â€â‚¬Ã¢â€â‚¬ Stop tracking Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+  // -â‚¬-â‚¬ Stop tracking -â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬
   const stopTracking = useCallback(() => {
     locationSubRef.current?.remove();
     locationSubRef.current = null;
@@ -425,20 +425,24 @@ export function MechanicTrackingScreen() {
     }
   }, [currentBooking?.status, status, startTracking]);
 
-  // Ã¢â€â‚¬Ã¢â€â‚¬ Signal arrival Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+  // -â‚¬-â‚¬ Signal arrival -â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬
   const signalArrival = useCallback(() => {
     socketRef.current?.emit('mechanic:arrived', { bookingId });
     stopTracking();
     setStatus('arrived');
-    Alert.alert('Arrival Confirmed! Ã°Å¸Å¡â€”', 'The customer has been alerted that you have reached the breakdown vehicle.');
-  }, [bookingId, stopTracking]);
+    // Persist arrival so the customer's booking reflect the real lifecycle
+    if (bookingId) {
+      updateBookingStatus(bookingId, 'arrived');
+    }
+    Alert.alert('Arrival Confirmed! 🚗', 'The customer has been alerted that you have reached the breakdown vehicle.');
+  }, [bookingId, stopTracking, updateBookingStatus]);
 
-  // Ã¢â€â‚¬Ã¢â€â‚¬ Complete Job & Invoice Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+  // -â‚¬-â‚¬ Complete Job & Invoice -â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬
   const handleCompleteJob = useCallback(() => {
     const totalAmount = currentBooking?.estimatedPrice || currentBooking?.totalPrice || 45;
     Alert.alert(
       'Complete Service & Issue Invoice',
-      `Summary:\nÃ¢â‚¬Â¢ Service: ${currentBooking?.serviceType || 'Emergency Roadside Assistance'}\nÃ¢â‚¬Â¢ Emergency Callout Fee: $25.00\nÃ¢â‚¬Â¢ Diagnostics & Labor: $${Math.max(0, totalAmount - 25).toFixed(2)}\nÃ¢â‚¬Â¢ Total Amount: $${Number(totalAmount).toFixed(2)}\n\nConfirm job completion and issue customer invoice?`,
+      `Summary:\n• Service: ${currentBooking?.serviceType || 'Emergency Roadside Assistance'}\n• Emergency Callout Fee: $25.00\n• Diagnostics & Labor: $${Math.max(0, totalAmount - 25).toFixed(2)}\n• Total Amount: $${Number(totalAmount).toFixed(2)}\n\nConfirm job completion and issue customer invoice?`,
       [
         { text: 'Cancel', style: 'cancel' },
         {
@@ -448,7 +452,7 @@ export function MechanicTrackingScreen() {
               await updateBookingStatus(bookingId, 'completed');
             }
             setStatus('completed');
-            Alert.alert('Job Completed! Ã°Å¸Å½â€°', 'Customer invoice generated and payout recorded in your earnings.');
+            Alert.alert('Job Completed! 🎉', 'Customer invoice generated and payout recorded in your earnings.');
           },
         },
       ]
@@ -476,7 +480,7 @@ export function MechanicTrackingScreen() {
   };
 
 
-  // Ã¢â€â‚¬Ã¢â€â‚¬ Status styles Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+  // -â‚¬-â‚¬ Status styles -â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬-â‚¬
   const statusMeta = {
     idle:        { icon: 'location-outline', color: colors.neutral[500], label: 'Ready for Dispatch' },
     tracking:    { icon: 'navigate',         color: colors.success[600], label: 'En Route to Motorist' },
@@ -506,7 +510,7 @@ export function MechanicTrackingScreen() {
                 <View style={styles.webGpsHeader}>
                   <View style={styles.webPulseDot} />
                   <Text style={styles.webGpsHeaderText}>
-                    LIVE TELEMETRY RADAR Ã¢â‚¬Â¢ PHNOM PENH
+                    LIVE TELEMETRY RADAR • PHNOM PENH
                   </Text>
                 </View>
 
@@ -631,7 +635,7 @@ export function MechanicTrackingScreen() {
                 {currentBooking?.customer?.name || currentBooking?.customerName || "Stranded Motorist"}
               </Text>
               <Text style={styles.serviceSubText} numberOfLines={1}>
-                #{bookingId?.slice(-6).toUpperCase() || 'BK-8902'} Ã¢â‚¬Â¢ {currentBooking?.serviceType || "Emergency Roadside Assistance"}
+                #{bookingId?.slice(-6).toUpperCase() || 'BK-8902'} • {currentBooking?.serviceType || "Emergency Roadside Assistance"}
               </Text>
             </View>
             <View style={styles.etaBadge}>
@@ -650,7 +654,7 @@ export function MechanicTrackingScreen() {
               </Text>
             </View>
             <View style={styles.cambodianPlateBadge}>
-              <Text style={styles.cambodianPlateFlag}>Ã°Å¸â€¡Â°Ã°Å¸â€¡Â­</Text>
+              <Text style={styles.cambodianPlateFlag}>â€¡Â°â€¡Â­</Text>
               <Text style={styles.cambodianPlateText}>
                 {currentBooking?.vehicle?.plateNumber || "Phnom Penh 2B-8899"}
               </Text>

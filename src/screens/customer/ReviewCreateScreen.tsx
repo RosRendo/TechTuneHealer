@@ -8,12 +8,14 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import { useBookingStore } from "../../store";
 import { useTranslation } from "../../store/languageStore";
+import api from "../../services/api";
 import { AnimatedEntrance } from "../../components";
 import { colors, spacing, shadows } from "../../constants/theme";
 import type { CustomerStackScreenProps } from "../../navigation/types";
@@ -22,17 +24,42 @@ export function ReviewCreateScreen() {
   const navigation = useNavigation<CustomerStackScreenProps<"ReviewCreate">["navigation"]>();
   const route = useRoute<CustomerStackScreenProps<"ReviewCreate">["route"]>();
   const { bookingId } = route.params;
-  const { t, isKhmer } = useTranslation();
+  const { isKhmer } = useTranslation();
 
   const { bookings } = useBookingStore();
   const booking = bookings.find((b) => b.id === bookingId);
 
   const [rating, setRating] = useState(0);
   const [review, setReview] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
-  const handleSubmit = () => {
-    // In a full app, this would call an API to submit the review
-    navigation.goBack();
+  const handleSubmit = async () => {
+    if (rating === 0 || submitting || !booking) return;
+    setSubmitting(true);
+    try {
+      // Real review persisted to the backend (recalcs the provider's rating too)
+      await api.reviews.create({
+        providerId: booking.providerId,
+        bookingId: booking.id,
+        rating,
+        comment: review.trim(),
+      });
+      Alert.alert(
+        isKhmer ? "អរគុណ!" : "Thank you!",
+        isKhmer
+          ? "ការវាយតម្លៃរបស់អ្នកត្រូវបានបញ្ជូន។"
+          : "Your review has been submitted.",
+        [{ text: "OK", onPress: () => navigation.goBack() }]
+      );
+    } catch (err: any) {
+      Alert.alert(
+        isKhmer ? "បរាជ័យ" : "Failed to submit",
+        err?.response?.data?.message ||
+          (isKhmer ? "សូមព្យាយាមម្តងទៀត។" : "Please try again later."),
+      );
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   if (!booking) {
@@ -150,13 +177,15 @@ export function ReviewCreateScreen() {
           <TouchableOpacity
             style={[
               styles.submitButton,
-              rating === 0 && styles.submitButtonDisabled
+              (rating === 0 || submitting) && styles.submitButtonDisabled
             ]}
             onPress={handleSubmit}
-            disabled={rating === 0}
+            disabled={rating === 0 || submitting}
           >
             <Text style={styles.submitButtonText}>
-              {isKhmer ? "បញ្ជូនការវាយតម្លៃ" : "Submit Review"}
+              {submitting
+                ? (isKhmer ? "កំពុងបញ្ជូន..." : "Submitting...")
+                : (isKhmer ? "បញ្ជូនការវាយតម្លៃ" : "Submit Review")}
             </Text>
           </TouchableOpacity>
         </View>

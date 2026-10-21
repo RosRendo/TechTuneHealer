@@ -124,10 +124,42 @@ export default function ScheduleScreen() {
     });
   }, [bookings]);
 
+  // Persist the weekly schedule to the backend (24h times expected)
+  const persistSchedule = useCallback(
+    (next: MockDaySchedule[]) => {
+      const to24h = (t: string) => {
+        const m = t.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)?$/i);
+        if (!m) return t;
+        let h = parseInt(m[1], 10);
+        if (m[3] && m[3].toUpperCase() === "PM" && h < 12) h += 12;
+        if (m[3] && m[3].toUpperCase() === "AM" && h === 12) h = 0;
+        return `${String(h).padStart(2, "0")}:${m[2]}`;
+      };
+      const dayKeys = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
+      const workingHours: Record<string, unknown> = {};
+      next.forEach((d, i) => {
+        workingHours[dayKeys[i]] = d.isEnabled
+          ? { isOpen: true, openTime: to24h(d.startTime), closeTime: to24h(d.endTime) }
+          : { isOpen: false };
+      });
+      api.providers
+        .updateHours(workingHours as any)
+        .catch(() => {
+          Alert.alert("Save failed", "Could not save your schedule. Please try again.");
+        });
+    },
+    []
+  );
+
   const toggleDayEnabled = (index: number) => {
-    setSchedule((prev) =>
-      prev.map((item, idx) => (idx === index ? { ...item, isEnabled: !item.isEnabled } : item))
-    );
+    let next: MockDaySchedule[] = [];
+    setSchedule((prev) => {
+      next = prev.map((item, idx) =>
+        idx === index ? { ...item, isEnabled: !item.isEnabled } : item
+      );
+      return next;
+    });
+    persistSchedule(next.length ? next : schedule);
   };
 
   const handleOpenTimeModal = (day: MockDaySchedule) => {
@@ -137,11 +169,11 @@ export default function ScheduleScreen() {
 
   const setHoursPreset = (startTime: string, endTime: string) => {
     if (editingDay) {
-      setSchedule((prev) =>
-        prev.map((item) =>
-          item.day === editingDay.day ? { ...item, startTime, endTime, isEnabled: true } : item
-        )
+      const next = schedule.map((item) =>
+        item.day === editingDay.day ? { ...item, startTime, endTime, isEnabled: true } : item
       );
+      setSchedule(next);
+      persistSchedule(next);
       setTimeEditModalVisible(false);
     }
   };

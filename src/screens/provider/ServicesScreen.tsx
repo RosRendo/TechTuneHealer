@@ -105,9 +105,19 @@ export default function ServicesScreen() {
   });
 
   const toggleService = (id: string) => {
+    // Optimistic flip, then persist isActive
     setServices((prev) =>
       prev.map((s) => (s.id === id ? { ...s, isActive: !s.isActive } : s))
     );
+    const target = services.find((s) => s.id === id);
+    if (!target || target.id.startsWith("srv-")) return; // template rows are local-only
+    api.providers.updateService(id, { isActive: !target.isActive }).catch(() => {
+      // Revert on failure
+      setServices((prev) =>
+        prev.map((s) => (s.id === id ? { ...s, isActive: target.isActive } : s))
+      );
+      Alert.alert("Update failed", "Could not save the service state. Please try again.");
+    });
   };
 
   const deleteService = (id: string) => {
@@ -116,7 +126,16 @@ export default function ServicesScreen() {
       {
         text: "Delete",
         style: "destructive",
-        onPress: () => setServices((prev) => prev.filter((s) => s.id !== id)),
+        onPress: () => {
+          setServices((prev) => prev.filter((s) => s.id !== id));
+          // Server-side delete when the row is a real catalog entry
+          if (!id.startsWith("srv-")) {
+            api.providers.deleteService(id).catch(() => {
+              Alert.alert("Delete failed", "Could not remove the service. Please try again.");
+              loadServices();
+            });
+          }
+        },
       },
     ]);
   };
@@ -148,32 +167,58 @@ export default function ServicesScreen() {
       return;
     }
 
+    const payload = {
+      name: formName.trim(),
+      description: formDescription.trim() || "Professional automotive service by certified technicians",
+      price: priceNum,
+      category: formCategory,
+      durationMinutes: parseInt(formDuration) || 40,
+    };
+
     if (editingService) {
+      // Persist edits for real catalog rows; template rows stays local
+      const isRealRow = !editingService.id.startsWith("srv-");
       setServices((prev) =>
         prev.map((s) =>
           s.id === editingService.id
             ? {
                 ...s,
-                name: formName.trim(),
+                name: payload.name,
                 category: formCategory,
-                description: formDescription.trim(),
+                description: payload.description,
                 price: priceNum,
-                durationMinutes: parseInt(formDuration) || 40,
+                durationMinutes: payload.durationMinutes,
               }
             : s
         )
       );
+      if (isRealRow) {
+        api.providers
+          .updateService(editingService.id, payload)
+          .catch(() => {
+            Alert.alert("Save failed", "Could not save to the server. Changes may not persist.");
+          });
+      }
     } else {
-      const newServiceItem: MockService = {
-        id: `srv-${Date.now()}`,
-        name: formName.trim(),
-        category: formCategory,
-        description: formDescription.trim() || "Professional automotive service by certified technicians",
-        price: priceNum,
-        durationMinutes: parseInt(formDuration) || 40,
-        isActive: true,
-      };
-      setServices([newServiceItem, ...services]);
+      api.providers
+        .createService(payload)
+        .then((created: any) => {
+          setServices((prev) => [
+            {
+              id: created?.id || `srv-${Date.now()}`,
+              name: payload.name,
+              category: formCategory,
+              description: payload.description,
+              price: priceNum,
+              durationMinutes: payload.durationMinutes,
+              isActive: true,
+            },
+            ...prev,
+          ]);
+        })
+        .catch(() => {
+          Alert.alert("Save failed", "Could not add the service on the server. Please try again.");
+        });
     }
 
     setShowAddModal(false);
