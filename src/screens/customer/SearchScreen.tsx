@@ -9,6 +9,8 @@ import {
   Dimensions,
   Platform,
   Image,
+  Modal,
+  Switch,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation, useRoute } from "@react-navigation/native";
@@ -45,7 +47,12 @@ export function SearchScreen() {
   const mapRef = useRef<any>(null);
   const { t } = useTranslation();
   const { currentLocation } = useLocationStore();
-  const { searchProviders, providers, setFilters } = useProviderSearchStore();
+  const { searchProviders, providers, filters, setFilters } = useProviderSearchStore();
+  // Filter sheet state (dead filter button previously had no handler)
+  const [filterModalVisible, setFilterModalVisible] = useState(false);
+  const [filterMaxDistance, setFilterMaxDistance] = useState<number | undefined>(undefined);
+  const [filterMinRating, setFilterMinRating] = useState<number | undefined>(undefined);
+  const [filterEmergencyOnly, setFilterEmergencyOnly] = useState<boolean>(false);
 
   const categories = [
     { id: "all", label: t("all"), icon: "apps" },
@@ -54,8 +61,8 @@ export function SearchScreen() {
     { id: "repair", label: t("diagnosticsTitle"), icon: "build" },
     { id: "battery", label: t("batteryCare"), icon: "battery-charging" },
     { id: "tires", label: t("tiresWheels"), icon: "disc" },
-    { id: "fuel", label: `${t("gasFuelStations")} ⛽`, icon: "flame" },
-    { id: "ev", label: `${t("evChargingStations")} ⚡`, icon: "flash" },
+    { id: "fuel", label: `${t("gasFuelStations")} â›½`, icon: "flame" },
+    { id: "ev", label: `${t("evChargingStations")} âš¡`, icon: "flash" },
   ];
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -277,8 +284,8 @@ export function SearchScreen() {
       };
 
   return (
-    <SafeAreaView style={styles.container} edges={["top"]}>
-      {/* Header & Search */}
+    <>
+    <SafeAreaView style={styles.container} edges={["top"]}>      {/* Header & Search */}
       <AnimatedEntrance delay={0} direction="down">
         <View style={styles.header}>
           <View style={styles.headerTop}>
@@ -362,7 +369,7 @@ export function SearchScreen() {
                 </TouchableOpacity>
               )}
             </View>
-            <TouchableOpacity style={styles.filterButton}>
+            <TouchableOpacity style={styles.filterButton} onPress={() => setFilterModalVisible(true)}>
               <Ionicons name="options" size={20} color={colors.neutral[900]} />
             </TouchableOpacity>
           </View>
@@ -703,7 +710,7 @@ export function SearchScreen() {
                             : "Need Certified EV & Hybrid Service?"}
                         </Text>
                         <Text style={styles.mechanicsFooterSub}>
-                          {filteredProviders.length} mechanics available nearby • Tap to view →
+                          {filteredProviders.length} mechanics available nearby â€¢ Tap to view â†’
                         </Text>
                       </View>
                     </TouchableOpacity>
@@ -829,6 +836,116 @@ export function SearchScreen() {
         </View>
       </AnimatedEntrance>
     </SafeAreaView>
+
+      {/* Filter sheet â€” radius / rating / emergency, feeds the provider-search store */}
+      <Modal
+        visible={filterModalVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setFilterModalVisible(false)}
+      >
+        <View style={styles.filterSheetBackdrop}>
+          <TouchableOpacity
+            style={styles.filterSheetBackdropTouch}
+            activeOpacity={1}
+            onPress={() => setFilterModalVisible(false)}
+          />
+          <View style={styles.filterSheetCard}>
+            <View style={styles.filterSheetHeader}>
+              <Text style={styles.filterSheetTitle}>Filter Mechanics</Text>
+              <TouchableOpacity
+                onPress={() => setFilterModalVisible(false)}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              >
+                <Ionicons name="close" size={20} color={colors.neutral[500]} />
+              </TouchableOpacity>
+            </View>
+
+            <Text style={styles.filterSheetLabel}>Distance</Text>
+            <View style={styles.filterChipRow}>
+              {[
+                { label: "Any", v: undefined },
+                { label: "5 km", v: 5 },
+                { label: "10 km", v: 10 },
+                { label: "25 km", v: 25 },
+                { label: "50 km", v: 50 },
+              ].map((opt) => (
+                <TouchableOpacity
+                  key={opt.label}
+                  style={[
+                    styles.filterChip,
+                    filterMaxDistance === opt.v && styles.filterChipSelected,
+                  ]}
+                  onPress={() => setFilterMaxDistance(opt.v)}
+                >
+                  <Text
+                    style={[
+                      styles.filterChipText,
+                      filterMaxDistance === opt.v && styles.filterChipTextSelected,
+                    ]}
+                  >
+                    {opt.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            <Text style={styles.filterSheetLabel}>Minimum Rating</Text>
+            <View style={styles.filterChipRow}>
+              {[
+                { label: "Any", v: undefined },
+                { label: "4.0+ â˜…", v: 4 },
+                { label: "4.5+ â˜…", v: 4.5 },
+              ].map((opt) => (
+                <TouchableOpacity
+                  key={opt.label}
+                  style={[
+                    styles.filterChip,
+                    filterMinRating === opt.v && styles.filterChipSelected,
+                  ]}
+                  onPress={() => setFilterMinRating(opt.v)}
+                >
+                  <Text
+                    style={[
+                      styles.filterChipText,
+                      filterMinRating === opt.v && styles.filterChipTextSelected,
+                    ]}
+                  >
+                    {opt.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            <View style={styles.filterSwitchRow}>
+              <Text style={styles.filterSheetLabel}>Emergency rescue only</Text>
+              <Switch
+                value={filterEmergencyOnly}
+                onValueChange={setFilterEmergencyOnly}
+                trackColor={{ false: colors.neutral[200], true: colors.primary[600] }}
+                thumbColor={colors.white}
+              />
+            </View>
+
+            <TouchableOpacity
+              style={styles.filterApplyBtn}
+              onPress={() => {
+                setFilters({
+                  maxDistance: filterMaxDistance,
+                  minRating: filterMinRating,
+                  isEmergency: filterEmergencyOnly || undefined,
+                });
+                const loc = currentLocation || { latitude: 11.5564, longitude: 104.9282 };
+                searchProviders(loc).catch(() => {});
+                setFilterModalVisible(false);
+              }}
+            >
+              <Text style={styles.filterApplyText}>Apply Filters</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+    </>
   );
 }
 
@@ -1034,7 +1151,7 @@ function StationMapCard({
           ) : station.evSpecs ? (
             <View style={styles.evPowerTagPill}>
               <Text style={styles.evPowerTagPillText}>
-                {station.evSpecs.powerKw}kW • {station.evSpecs.availablePlugs}/{station.evSpecs.totalPlugs} Free
+                {station.evSpecs.powerKw}kW â€¢ {station.evSpecs.availablePlugs}/{station.evSpecs.totalPlugs} Free
               </Text>
             </View>
           ) : null}
@@ -1183,7 +1300,7 @@ function StationMiniCard({
           {isFuel && station.fuelPrices
             ? `$${station.fuelPrices.regular.toFixed(2)}/L`
             : station.evSpecs
-            ? `${station.evSpecs.powerKw}kW • Free`
+            ? `${station.evSpecs.powerKw}kW â€¢ Free`
             : "Open"}
         </Text>
         {distance && <Text style={styles.miniDistanceText}>{distance}</Text>}
@@ -2019,5 +2136,81 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#2563EB",
     marginTop: 2,
+  },
+  filterSheetBackdrop: {
+    flex: 1,
+    backgroundColor: "rgba(10, 13, 20, 0.5)",
+    justifyContent: "flex-end",
+  },
+  filterSheetBackdropTouch: {
+    flex: 1,
+  },
+  filterSheetCard: {
+    backgroundColor: colors.white,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: spacing.lg,
+    paddingBottom: spacing["3xl"],
+    gap: 10,
+    ...shadows.lg,
+  },
+  filterSheetHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  filterSheetTitle: {
+    fontSize: 17,
+    fontWeight: "800",
+    color: colors.neutral[900],
+  },
+  filterSheetLabel: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: colors.neutral[700],
+    marginTop: 4,
+  },
+  filterChipRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+  filterChip: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 999,
+    borderWidth: 1.5,
+    borderColor: colors.neutral[200],
+    backgroundColor: colors.white,
+  },
+  filterChipSelected: {
+    borderColor: colors.primary[600],
+    backgroundColor: colors.primary[50],
+  },
+  filterChipText: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: colors.neutral[600],
+  },
+  filterChipTextSelected: {
+    color: colors.primary[700],
+  },
+  filterSwitchRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginTop: 6,
+  },
+  filterApplyBtn: {
+    marginTop: 8,
+    backgroundColor: colors.primary[600],
+    borderRadius: 16,
+    paddingVertical: 14,
+    alignItems: "center",
+  },
+  filterApplyText: {
+    fontSize: 15,
+    fontWeight: "800",
+    color: colors.white,
   },
 });

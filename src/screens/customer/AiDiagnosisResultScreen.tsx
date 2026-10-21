@@ -30,6 +30,7 @@ export function AiDiagnosisResultScreen() {
   const [imageUri, setImageUri] = useState<string | null>(null);
   const [isScanning, setIsScanning] = useState(false);
   const [report, setReport] = useState<any>(null);
+  const [scanError, setScanError] = useState<string | null>(null);
 
   const { currentLocation } = useLocationStore();
   const { providers, searchProviders, isLoading: providersLoading } = useProviderSearchStore();
@@ -44,14 +45,16 @@ export function AiDiagnosisResultScreen() {
   const handleImageSelected = (uri: string) => {
     setImageUri(uri);
     setReport(null);
+    setScanError(null);
   };
 
   const handleScan = async () => {
     if (!imageUri) return;
 
     setIsScanning(true);
+    setScanError(null);
     try {
-      const token = await AsyncStorage.getItem('authToken'); 
+      const token = await AsyncStorage.getItem('authToken');
 
       const formData = new FormData();
       formData.append('image', {
@@ -69,20 +72,23 @@ export function AiDiagnosisResultScreen() {
       });
 
       if (!response.ok) {
-        throw new Error('Scan failed');
+        // Surface the backend's reason (quota, bad image, model error…) when given
+        let message = 'Scan failed. Please try again.';
+        try {
+          const errData = await response.json();
+          if (errData?.message) message = errData.message;
+        } catch { /* non-JSON error body — keep default message */ }
+        throw new Error(message);
       }
 
       const data = await response.json();
       setReport(data.report);
-    } catch {
-      // Fallback AI simulation for demonstration
-      setTimeout(() => {
-        setReport({
-          resultSummary: "Brake pad wear detected with light rotor surface scoring",
-          details: { part: "Brake System", issue: "Friction Pad Wear", confidence: 0.94 },
-          severity: "MEDIUM",
-        });
-      }, 1200);
+    } catch (err: any) {
+      // Real failure — show an honest error state instead of a fake report
+      setScanError(
+        err?.message ||
+          'We could not connect to the AI scanner. Check your connection and try again.'
+      );
     } finally {
       setIsScanning(false);
     }
@@ -196,6 +202,24 @@ export function AiDiagnosisResultScreen() {
             />
           </View>
         </AnimatedEntrance>
+
+        {scanError && (
+          <AnimatedEntrance delay={0} direction="up">
+            <View style={styles.scanErrorCard}>
+              <View style={styles.reportHeader}>
+                <Ionicons name="cloud-offline" size={24} color={colors.error[500]} />
+                <Text style={[styles.reportTitle, { color: colors.error[500] }]}>
+                  {language === 'km' ? 'ការស្កេនបរាជ័យ' : 'Scan Failed'}
+                </Text>
+              </View>
+              <Text style={styles.scanErrorMessage}>{scanError}</Text>
+              <TouchableOpacity style={styles.scanRetryBtn} onPress={handleScan}>
+                <Ionicons name="refresh" size={16} color={colors.white} />
+                <Text style={styles.scanRetryText}>Try Again</Text>
+              </TouchableOpacity>
+            </View>
+          </AnimatedEntrance>
+        )}
 
         {report && (
           <AnimatedEntrance delay={0} direction="up">
@@ -412,6 +436,35 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
     borderWidth: 1,
     borderColor: "rgba(0,0,0,0.04)",
+  },
+  scanErrorCard: {
+    backgroundColor: colors.white,
+    borderRadius: borderRadius.xl,
+    padding: spacing.lg,
+    ...shadows.sm,
+    marginBottom: spacing.lg,
+    borderWidth: 1,
+    borderColor: colors.error[500],
+  },
+  scanErrorMessage: {
+    fontSize: fontSize.sm,
+    color: colors.neutral[700],
+    lineHeight: 20,
+  },
+  scanRetryBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    marginTop: spacing.md,
+    backgroundColor: colors.error[500],
+    borderRadius: borderRadius.lg,
+    paddingVertical: spacing.sm + 2,
+  },
+  scanRetryText: {
+    fontSize: fontSize.sm,
+    fontWeight: fontWeight.bold,
+    color: colors.white,
   },
   reportHeader: {
     flexDirection: 'row',

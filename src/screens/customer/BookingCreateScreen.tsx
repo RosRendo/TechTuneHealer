@@ -15,6 +15,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { Button } from "../../components/Button";
 import { AnimatedEntrance } from "../../components";
 import { useBookingStore, useProviderSearchStore } from "../../store";
+import { useVehicleStore } from "../../store/vehicleStore";
 import {
   colors,
   spacing,
@@ -55,6 +56,7 @@ export function BookingCreateScreen() {
 
   const { createBooking, isLoading } = useBookingStore();
   const { providers } = useProviderSearchStore();
+  const getActiveVehicle = useVehicleStore((s) => s.getActiveVehicle);
 
   const provider = providers.find((p) => p.id === providerId);
 
@@ -112,13 +114,21 @@ export function BookingCreateScreen() {
   };
 
   const handleConfirmBooking = async () => {
+    if (!selectedTime) {
+      Alert.alert("Select Time", "Please select an appointment time.");
+      return;
+    }
+    const primaryService = SERVICES.find((s) => s.id === selectedServices[0]);
     try {
       const booking = await createBooking({
         providerId,
+        vehicleId: getActiveVehicle()?.id,
         serviceIds: selectedServices,
+        serviceType: primaryService?.name || serviceType,
         scheduledDate: new Date(
           format(selectedDate, "yyyy-MM-dd") + "T" + selectedTime,
         ),
+        scheduledTime: selectedTime,
         estimatedPrice: calculateTotal(),
         notes,
         isEmergency: isEmergency || false,

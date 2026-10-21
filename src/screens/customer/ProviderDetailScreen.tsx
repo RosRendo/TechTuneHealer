@@ -9,6 +9,7 @@ import {
   Platform,
   Image,
   ActivityIndicator,
+  Share,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation, useRoute } from "@react-navigation/native";
@@ -86,6 +87,22 @@ export function ProviderDetailScreen() {
     const { latitude, longitude } = provider.location;
     const url = `https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}`;
     Linking.openURL(url);
+  };
+
+  const handleShare = () => {
+    // Native share sheet: send the workshop's profile to another user
+    const sharingText = [
+      `🔧 ${provider.businessName} on TechTune Healer`,
+      provider.address ? `📍 ${provider.address}` : "",
+      provider.phone ? `📞 ${provider.phone}` : "",
+      `⭐ ${provider.rating ?? "—"} rating`,
+    ]
+      .filter(Boolean)
+      .join("\n");
+    Share.share({
+      title: `Share ${provider.businessName}`,
+      message: sharingText,
+    }).catch(() => { /* share sheet dismissed */ });
   };
 
   const handleBookNow = () => {
@@ -265,7 +282,7 @@ export function ProviderDetailScreen() {
                   </View>
                   <Text style={styles.quickActionText}>Directions</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.quickAction} onPress={() => {}}>
+                <TouchableOpacity style={styles.quickAction} onPress={handleShare}>
                   <View
                     style={[
                       styles.quickActionIcon,

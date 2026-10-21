@@ -18,6 +18,7 @@ import {
   shadows,
 } from "../../constants/theme";
 import { AnimatedEntrance } from "../../components";
+import { useAuthStore } from "../../store";
 
 interface Notification {
   id: string;
@@ -30,6 +31,10 @@ interface Notification {
 
 export function NotificationsScreen() {
   const navigation = useNavigation<any>();
+  const userRole = useAuthStore((s) => s.userRole);
+  // Tap targets differ per side: provider stacks have no "CustomerTabs" route —
+  // navigating to it from the provider screen crashes (navigate to a dropped route)
+  const tabBarRoute = userRole === "provider" ? "ProviderTabs" : "CustomerTabs";
   const [notifications, setNotifications] = useState<Notification[]>([
     {
       id: "1",
@@ -109,11 +114,17 @@ export function NotificationsScreen() {
     );
 
     if (item.type === "booking") {
-      navigation.navigate("CustomerTabs", { screen: "Bookings" });
+      if (userRole === "provider") {
+        navigation.navigate("Bookings");
+      } else {
+        navigation.navigate(tabBarRoute, { screen: "Bookings" });
+      }
     } else if (item.type === "message") {
       navigation.navigate("Chat", { bookingId: "active" });
+    } else if (userRole === "provider") {
+      navigation.navigate("Dashboard");
     } else {
-      navigation.navigate("CustomerTabs", { screen: "Home" });
+      navigation.navigate(tabBarRoute, { screen: "Home" });
     }
   };
 

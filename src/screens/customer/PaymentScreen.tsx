@@ -52,7 +52,9 @@ export function PaymentScreen() {
   const totalAmount: number = typeof params.totalAmount === 'number' ? params.totalAmount : 0;
   const rawItems: Item[] = Array.isArray(params.items) ? params.items : [];
   const passedBookingId: string | undefined = params.bookingId;
-  const targetBookingId = passedBookingId || bookings.find((b) => b.status === 'pending')?.id;
+  // Only pay the booking this screen was opened for — never auto-pick an unrelated
+  // pending booking (shop-cart checkouts must not flip service booking statuses)
+  const targetBookingId = passedBookingId;
 
   // Fallback demo items if none supplied but amount > 0
   const items: Item[] = useMemo(() => {
@@ -349,12 +351,18 @@ export function PaymentScreen() {
           { headers: { Authorization: `Bearer ${token}` } }
         );
       }
-    } catch {
-      // Backend offline or local fallback — checkout still completes gracefully
+    } catch (err: any) {
+      // Real failure — never fake success. Surface the backend reason if given.
+      setProcessing(false);
+      const msg =
+        err?.response?.data?.message ||
+        'Checkout failed. Please check your connection and try again — you have NOT been charged.';
+      Alert.alert('Payment Failed', msg, [{ text: 'OK' }]);
+      return;
     }
 
-    // Automatically confirm & transition booking status to active/accepted
-    if (targetBookingId) {
+  // Only confirm the booking this payment was opened for (passed explicitly)
+  if (targetBookingId) {
       try {
         const currentBooking = bookings.find((b) => b.id === targetBookingId);
         const nextStatus = currentBooking?.status === 'in_progress' ? 'completed' : 'accepted';
