@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { translations, type Language } from "@/lib/i18n";
+import { getApiBaseUrl } from "@/lib/api";
 
 export interface AiScannerModalProps {
   isOpen: boolean;
@@ -297,7 +298,7 @@ export function AiScannerModal({ isOpen, onClose, lang, onOpenAuth }: AiScannerM
       try {
         const formData = new FormData();
         formData.append("image", fileInputRef.current.files[0]);
-        const baseUrl = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000").replace(/\/+$/, "");
+        const baseUrl = getApiBaseUrl();
         
         const token = localStorage.getItem("provider_token") || localStorage.getItem("admin_token");
         await fetch(`${baseUrl}/diagnostics/scan`, {

@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { getApiBaseUrl } from "@/lib/api";
 import ProviderDispatchTerminal from "@/components/operations/ProviderDispatchTerminal";
 import NeedsAttention from "@/components/operations/NeedsAttention";
 import SlaPerformanceChart from "@/components/operations/SlaPerformanceChart";
@@ -166,7 +167,7 @@ export default function ProviderDashboardPage() {
   const [payoutSubmitting, setPayoutSubmitting] = useState(false);
 
   const fetchPayoutHistory = useCallback(async (token: string) => {
-    const baseUrl = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000").replace(/\/+$/, "");
+    const baseUrl = getApiBaseUrl();
     try {
       const res = await fetch(`${baseUrl}/providers/me/payouts`, {
         headers: { Authorization: `Bearer ${token}` },
@@ -199,7 +200,7 @@ export default function ProviderDashboardPage() {
   const fetchProviderData = useCallback(async (token: string) => {
     setSyncing(true);
     try {
-      const baseUrl = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000").replace(/\/+$/, "");
+      const baseUrl = getApiBaseUrl();
 
       const resBookings = await fetch(`${baseUrl}/bookings`, {
         headers: { Authorization: `Bearer ${token}` },
@@ -326,7 +327,7 @@ export default function ProviderDashboardPage() {
     if (!token || !bookingId) return;
 
     try {
-      const baseUrl = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000").replace(/\/+$/, "");
+      const baseUrl = getApiBaseUrl();
       const res = await fetch(`${baseUrl}/chat/${bookingId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -357,7 +358,7 @@ export default function ProviderDashboardPage() {
     setIsSendingChat(true);
 
     const token = localStorage.getItem("provider_token");
-    const baseUrl = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000").replace(/\/+$/, "");
+    const baseUrl = getApiBaseUrl();
 
     try {
       const res = await fetch(`${baseUrl}/chat/${selectedBookingId}`, {
@@ -388,7 +389,7 @@ export default function ProviderDashboardPage() {
 
     setActionLoadingId(bookingId);
     try {
-      const baseUrl = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000").replace(/\/+$/, "");
+      const baseUrl = getApiBaseUrl();
       const res = await fetch(`${baseUrl}/bookings/${bookingId}/status`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
@@ -433,7 +434,7 @@ export default function ProviderDashboardPage() {
     setIsEmergencyActive(nextVal);
 
     try {
-      const baseUrl = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000").replace(/\/+$/, "");
+      const baseUrl = getApiBaseUrl();
       await fetch(`${baseUrl}/providers/me`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
@@ -2186,7 +2187,7 @@ export default function ProviderDashboardPage() {
                 <button
                   onClick={async () => {
                     const token = localStorage.getItem("provider_token");
-                    const baseUrl = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000").replace(/\/+$/, "");
+                    const baseUrl = getApiBaseUrl();
                     try {
                       const labelKey: Record<string, string> = {
                         Monday: "monday", Tuesday: "tuesday", Wednesday: "wednesday",
@@ -2334,7 +2335,7 @@ export default function ProviderDashboardPage() {
                     return;
                   }
                   const token = localStorage.getItem("provider_token");
-                  const baseUrl = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000").replace(/\/+$/, "");
+                  const baseUrl = getApiBaseUrl();
                   try {
                     const body = JSON.stringify({
                       name: serviceForm.name.trim(),
@@ -2442,7 +2443,7 @@ export default function ProviderDashboardPage() {
                   }
                   setPayoutSubmitting(true);
                   const token = localStorage.getItem("provider_token");
-                  const baseUrl = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000").replace(/\/+$/, "");
+                  const baseUrl = getApiBaseUrl();
                   try {
                     const res = await fetch(`${baseUrl}/providers/me/payouts`, {
                       method: "POST",
@@ -2515,7 +2516,7 @@ export default function ProviderDashboardPage() {
                     return;
                   }
                   const token = localStorage.getItem("provider_token");
-                  const baseUrl = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000").replace(/\/+$/, "");
+                  const baseUrl = getApiBaseUrl();
                   try {
                     const res = await fetch(`${baseUrl}/reviews/${replyModalReview.id}/reply`, {
                       method: "POST",

@@ -6,6 +6,7 @@ import { Reveal, Counter } from "@/components/Reveal";
 import { translations, type Language } from "@/lib/i18n";
 import { AiScannerModal } from "@/components/AiScannerModal";
 import { APP_STORE_URL, PLAY_STORE_URL } from "@/lib/appLinks";
+import { getApiBaseUrl } from "@/lib/api";
 
 // Technical OEM Parts Catalog Data with Bilingual Details
 const OEM_PARTS = [
@@ -208,7 +209,7 @@ export default function EditorialLandingPage() {
     setLoginError("");
 
     try {
-      const baseUrl = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000").replace(/\/+$/, "");
+      const baseUrl = getApiBaseUrl();
       const res = await fetch(`${baseUrl}/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -256,7 +257,7 @@ export default function EditorialLandingPage() {
     setRegLoading(true);
 
     try {
-      const baseUrl = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000").replace(/\/+$/, "");
+      const baseUrl = getApiBaseUrl();
       const res = await fetch(`${baseUrl}/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },

@@ -5,6 +5,14 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: path.resolve(__dirname),
   },
+  async rewrites() {
+    return [
+      {
+        source: "/api-proxy/:path*",
+        destination: "https://ecommerce.dashboardkiller.online/:path*",
+      },
+    ];
+  },
 };
 
 export default nextConfig;

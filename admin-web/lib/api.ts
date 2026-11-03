@@ -1,15 +1,24 @@
 import axios from "axios";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+export function getApiBaseUrl(): string {
+  if (process.env.NEXT_PUBLIC_API_URL) {
+    return process.env.NEXT_PUBLIC_API_URL.replace(/\/+$/, "");
+  }
+  if (typeof window !== "undefined" && window.location.protocol === "https:") {
+    return "/api-proxy";
+  }
+  return "http://localhost:4000";
+}
 
 const api = axios.create({
-  baseURL: API_URL,
-  timeout: 10000,
+  baseURL: getApiBaseUrl(),
+  timeout: 15000,
 });
 
 // Attach JWT token from localStorage on every request (admin or provider)
 api.interceptors.request.use((config) => {
   if (typeof window !== "undefined") {
+    config.baseURL = getApiBaseUrl();
     const token =
       localStorage.getItem("admin_token") || localStorage.getItem("provider_token");
     if (token) {

@@ -1,3 +1,5 @@
+import "./env.js";
+
 /**
  * Shared security helpers.
  *
