@@ -5,7 +5,7 @@
   "rewrites": [
     {
       "source": "/api-proxy/(.*)",
-      "destination": "https://ecommerce.dashboardkiller.online/$1"
+      "destination": "https://techtune.dashboardkiller.online/$1"
     }
   ]
 }

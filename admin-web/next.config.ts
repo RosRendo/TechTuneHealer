@@ -9,7 +9,7 @@ const nextConfig: NextConfig = {
     return [
       {
         source: "/api-proxy/:path*",
-        destination: "https://ecommerce.dashboardkiller.online/:path*",
+        destination: "https://techtune.dashboardkiller.online/:path*",
       },
     ];
   },

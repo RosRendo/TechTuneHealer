@@ -7,7 +7,7 @@ export function getApiBaseUrl(): string {
   if (typeof window !== "undefined" && window.location.protocol === "https:") {
     return "/api-proxy";
   }
-  return "http://localhost:4000";
+  return "http://localhost:8013";
 }
 
 const api = axios.create({
