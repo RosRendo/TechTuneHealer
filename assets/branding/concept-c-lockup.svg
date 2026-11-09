@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 256" width="680" height="256">
+  <!-- Concept C: Lockup (Sentinel Beacon + Wordmark) -->
+  <g fill="none" stroke="#000000" stroke-linecap="round" stroke-linejoin="round" transform="translate(16, 0)">
+    <path d="M46 140 C46 76 90 42 112 42 C134 42 178 76 178 140" stroke-width="14" />
+    <path d="M68 156 C68 106 98 72 112 72 C126 72 156 106 156 156" stroke-width="12" />
+    <path d="M30 184 C70 196 154 196 194 184" stroke-width="14" />
+    <path d="M112 104 L118 124 L138 130 L118 136 L112 156 L106 136 L86 130 L106 124 Z" stroke-width="8" fill="#000000" />
+    <circle cx="48" cy="184" r="7" fill="#000000" stroke="none" />
+    <circle cx="176" cy="184" r="7" fill="#000000" stroke="none" />
+  </g>
+  <!-- Wordmark -->
+  <g fill="#000000">
+    <text x="236" y="128" font-family="-apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif" font-size="52" font-weight="900" letter-spacing="3">TECHTUNE</text>
+    <text x="238" y="172" font-family="-apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif" font-size="28" font-weight="700" letter-spacing="8" fill="#52525B">HEALER</text>
+    <rect x="238" y="190" width="340" height="4" rx="2" fill="#2563EB" />
+  </g>
+</svg>

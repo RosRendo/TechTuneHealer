@@ -1,0 +1,22 @@
+{
+  "avoid": [
+    "YourMechanic",
+    "Carvana",
+    "RepairPal",
+    "Grab",
+    "Uber"
+  ],
+  "app_store": {
+    "name": "TechTune Healer",
+    "subtitle": "Smart Auto & Roadside Help",
+    "promotional_text": "24/7 on-demand mechanic dispatch, AI vehicle diagnostics, and verified repair shops across Cambodia.",
+    "description": "TechTune Healer is Cambodia's modern automotive mobility platform. Connect with verified local mechanics, scan dashboard warning lights with AI diagnostics, and get fast roadside emergency assistance in Phnom Penh and along national highways.",
+    "keywords": "mechanic,car repair,towing,battery,cambodia,diagnostics,garage,emergency",
+    "whats_new": "Initial release of TechTune Healer with real-time GPS tracking and KHQR digital checkout."
+  },
+  "google_play": {
+    "title": "TechTune Healer",
+    "short_description": "Smart vehicle diagnostics and 24/7 roadside assistance in Cambodia.",
+    "full_description": "TechTune Healer is Cambodia's premier digital automotive platform connecting motorists with trusted local workshops and emergency mechanics. Features include 1-tap roadside SOS dispatch, live GPS mechanic tracking, AI-powered engine fault diagnostic scanner, and seamless KHQR cashless checkout."
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "name": "TechTune Healer",
+  "avoid": [
+    "YourMechanic",
+    "Carvana",
+    "RepairPal",
+    "Wrench",
+    "AutoZone",
+    "AAA Roadside",
+    "GrabCar",
+    "Calendly"
+  ],
+  "domains": [
+    "yourmechanic.com",
+    "carvana.com",
+    "repairpal.com",
+    "getwrench.com",
+    "autozone.com",
+    "aaa.com",
+    "calendly.com"
+  ],
+  "colors": [
+    "#006bff",
+    "#0ae8f0"
+  ]
+}

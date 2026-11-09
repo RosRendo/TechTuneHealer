@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Concept A: The Pulse Shield (Telemetry Rescue Crest) -->
+  <g fill="none" stroke="#000000" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Outer Aerodynamic Shield -->
+    <path d="M128 28 L196 52 C196 132 168 196 128 228 C88 196 60 132 60 52 Z" stroke-width="16" />
+    <!-- Inner Healer Cross & Telemetry Pulse -->
+    <path d="M112 80 H144 V108 H172 V132 H144 V168 H112 V132 H84 V108 H112 Z" stroke-width="12" fill="#000000" fill-opacity="0.1" />
+    <path d="M76 120 H104 L114 96 L128 144 L142 108 L152 120 H180" stroke-width="10" />
+    <!-- Lower Mechanic Caliper Anchor -->
+    <path d="M100 176 L128 194 L156 176" stroke-width="12" />
+  </g>
+</svg>

@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 256" width="680" height="256">
+  <!-- Concept B: Lockup (Hex Monogram + Wordmark) -->
+  <g fill="none" stroke="#000000" stroke-linecap="round" stroke-linejoin="round" transform="translate(16, 0)">
+    <!-- Hexagon -->
+    <path d="M112 32 L192 78 V178 L112 224 L32 178 V78 Z" stroke-width="14" />
+    <path d="M62 82 H162" stroke-width="14" />
+    <path d="M84 82 V174" stroke-width="14" />
+    <path d="M140 82 V174" stroke-width="14" />
+    <path d="M84 128 H102 L110 106 L116 150 L122 128 H140" stroke-width="10" />
+    <circle cx="112" cy="180" r="7" fill="#000000" stroke="none" />
+  </g>
+  <!-- Wordmark -->
+  <g fill="#000000">
+    <text x="236" y="128" font-family="-apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif" font-size="52" font-weight="900" letter-spacing="3">TECHTUNE</text>
+    <text x="238" y="172" font-family="-apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif" font-size="28" font-weight="700" letter-spacing="8" fill="#52525B">HEALER</text>
+    <rect x="238" y="190" width="340" height="4" rx="2" fill="#2563EB" />
+  </g>
+</svg>

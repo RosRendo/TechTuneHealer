@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Concept C: The Sentinel Beacon (Radar Wave & Rescue Spark) -->
+  <g fill="none" stroke="#000000" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Sweeping Radar Arcs / Protective Canopy -->
+    <path d="M52 144 C52 74 102 36 128 36 C154 36 204 74 204 144" stroke-width="16" />
+    <path d="M76 160 C76 104 110 68 128 68 C146 68 180 104 180 160" stroke-width="14" />
+    
+    <!-- Aerodynamic Chassis Base Line -->
+    <path d="M36 188 C80 200 176 200 220 188" stroke-width="16" />
+    
+    <!-- Central Diagnostic 4-Point Rescue Spark -->
+    <path d="M128 100 L136 124 L160 132 L136 140 L128 164 L120 140 L96 132 L120 124 Z" stroke-width="10" fill="#000000" />
+    
+    <!-- Anchor Nodes -->
+    <circle cx="56" cy="188" r="8" fill="#000000" stroke="none" />
+    <circle cx="200" cy="188" r="8" fill="#000000" stroke="none" />
+  </g>
+</svg>

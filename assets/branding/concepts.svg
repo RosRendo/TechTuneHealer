@@ -1,0 +1,241 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1600" height="984" viewBox="0 0 1600 984"><rect width="1600" height="984" fill="#f7f7f4"/><text x="60" y="78" font-family="system-ui,-apple-system,'Segoe UI',Helvetica,Arial,sans-serif" font-size="40" font-weight="700" fill="#161616">TechTune Healer — Identity Concepts</text><text x="60" y="116" font-family="system-ui,-apple-system,'Segoe UI',Helvetica,Arial,sans-serif" font-size="20" fill="#6b6b6b">Round 1 Exploration for Automotive Rescue &amp; AI Diagnostics Platform</text><rect x="60" y="150" width="474.667" height="774" rx="18" fill="#fff" stroke="#161616" stroke-width="2"/><g><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" x="90" y="190" width="414.667" height="300" preserveAspectRatio="xMidYMid meet">
+  <!-- Concept A: The Pulse Shield (Telemetry Rescue Crest) -->
+  <g fill="none" stroke="#000000" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Outer Aerodynamic Shield -->
+    <path d="M128 28 L196 52 C196 132 168 196 128 228 C88 196 60 132 60 52 Z" stroke-width="16" />
+    <!-- Inner Healer Cross & Telemetry Pulse -->
+    <path d="M112 80 H144 V108 H172 V132 H144 V168 H112 V132 H84 V108 H112 Z" stroke-width="12" fill="#000000" fill-opacity="0.1" />
+    <path d="M76 120 H104 L114 96 L128 144 L142 108 L152 120 H180" stroke-width="10" />
+    <!-- Lower Mechanic Caliper Anchor -->
+    <path d="M100 176 L128 194 L156 176" stroke-width="12" />
+  </g>
+</svg>
+</g><g><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 256" x="90" y="514" width="414.667" height="120" preserveAspectRatio="xMidYMid meet">
+  <!-- Concept A: Lockup (Symbol + Wordmark) -->
+  <g fill="none" stroke="#000000" stroke-linecap="round" stroke-linejoin="round" transform="translate(16, 0)">
+    <!-- Outer Aerodynamic Shield -->
+    <path d="M112 36 L174 58 C174 130 148 188 112 216 C76 188 50 130 50 58 Z" stroke-width="14" />
+    <!-- Inner Cross & Pulse -->
+    <path d="M98 82 H126 V108 H152 V128 H126 V160 H98 V128 H72 V108 H98 Z" stroke-width="10" fill="#000000" fill-opacity="0.1" />
+    <path d="M64 118 H90 L100 96 L112 140 L124 108 L134 118 H160" stroke-width="8" />
+    <path d="M86 170 L112 186 L138 170" stroke-width="10" />
+  </g>
+  <!-- Wordmark -->
+  <g fill="#000000">
+    <text x="236" y="128" font-family="-apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif" font-size="52" font-weight="900" letter-spacing="3">TECHTUNE</text>
+    <text x="238" y="172" font-family="-apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif" font-size="28" font-weight="700" letter-spacing="8" fill="#52525B">HEALER</text>
+    <rect x="238" y="190" width="340" height="4" rx="2" fill="#2563EB" />
+  </g>
+</svg>
+</g><g><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" x="90" y="660" width="64" height="64" preserveAspectRatio="xMidYMid meet">
+  <!-- Concept A: The Pulse Shield (Telemetry Rescue Crest) -->
+  <g fill="none" stroke="#000000" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Outer Aerodynamic Shield -->
+    <path d="M128 28 L196 52 C196 132 168 196 128 228 C88 196 60 132 60 52 Z" stroke-width="16" />
+    <!-- Inner Healer Cross & Telemetry Pulse -->
+    <path d="M112 80 H144 V108 H172 V132 H144 V168 H112 V132 H84 V108 H112 Z" stroke-width="12" fill="#000000" fill-opacity="0.1" />
+    <path d="M76 120 H104 L114 96 L128 144 L142 108 L152 120 H180" stroke-width="10" />
+    <!-- Lower Mechanic Caliper Anchor -->
+    <path d="M100 176 L128 194 L156 176" stroke-width="12" />
+  </g>
+</svg>
+</g><text x="122" y="744" font-family="system-ui,-apple-system,'Segoe UI',Helvetica,Arial,sans-serif" font-size="12" fill="#8a8a8a" text-anchor="middle">64px</text><g><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" x="180" y="692" width="32" height="32" preserveAspectRatio="xMidYMid meet">
+  <!-- Concept A: The Pulse Shield (Telemetry Rescue Crest) -->
+  <g fill="none" stroke="#000000" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Outer Aerodynamic Shield -->
+    <path d="M128 28 L196 52 C196 132 168 196 128 228 C88 196 60 132 60 52 Z" stroke-width="16" />
+    <!-- Inner Healer Cross & Telemetry Pulse -->
+    <path d="M112 80 H144 V108 H172 V132 H144 V168 H112 V132 H84 V108 H112 Z" stroke-width="12" fill="#000000" fill-opacity="0.1" />
+    <path d="M76 120 H104 L114 96 L128 144 L142 108 L152 120 H180" stroke-width="10" />
+    <!-- Lower Mechanic Caliper Anchor -->
+    <path d="M100 176 L128 194 L156 176" stroke-width="12" />
+  </g>
+</svg>
+</g><text x="196" y="744" font-family="system-ui,-apple-system,'Segoe UI',Helvetica,Arial,sans-serif" font-size="12" fill="#8a8a8a" text-anchor="middle">32px</text><g><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" x="238" y="708" width="16" height="16" preserveAspectRatio="xMidYMid meet">
+  <!-- Concept A: The Pulse Shield (Telemetry Rescue Crest) -->
+  <g fill="none" stroke="#000000" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Outer Aerodynamic Shield -->
+    <path d="M128 28 L196 52 C196 132 168 196 128 228 C88 196 60 132 60 52 Z" stroke-width="16" />
+    <!-- Inner Healer Cross & Telemetry Pulse -->
+    <path d="M112 80 H144 V108 H172 V132 H144 V168 H112 V132 H84 V108 H112 Z" stroke-width="12" fill="#000000" fill-opacity="0.1" />
+    <path d="M76 120 H104 L114 96 L128 144 L142 108 L152 120 H180" stroke-width="10" />
+    <!-- Lower Mechanic Caliper Anchor -->
+    <path d="M100 176 L128 194 L156 176" stroke-width="12" />
+  </g>
+</svg>
+</g><text x="246" y="744" font-family="system-ui,-apple-system,'Segoe UI',Helvetica,Arial,sans-serif" font-size="12" fill="#8a8a8a" text-anchor="middle">16px</text><text x="90.0" y="780" font-family="system-ui,-apple-system,'Segoe UI',Helvetica,Arial,sans-serif" font-size="26" font-weight="700" fill="#161616">A · Concept A: The Pulse Shield</text><text x="90.0" y="808" font-family="system-ui,-apple-system,'Segoe UI',Helvetica,Arial,sans-serif" font-size="15" font-weight="700" fill="#161616" letter-spacing="1.5">RECOMMENDED</text><text x="90.0" y="842" font-family="system-ui,-apple-system,'Segoe UI',Helvetica,Arial,sans-serif" font-size="19" fill="#555">Aerodynamic protective shield enclosing a</text><text x="90.0" y="868" font-family="system-ui,-apple-system,'Segoe UI',Helvetica,Arial,sans-serif" font-size="19" fill="#555">vital ECU diagnostic pulse and mechanic</text><text x="90.0" y="894" font-family="system-ui,-apple-system,'Segoe UI',Helvetica,Arial,sans-serif" font-size="19" fill="#555">anchor.</text><rect x="562.667" y="150" width="474.667" height="774" rx="18" fill="#fff" stroke="#e4e4e0" stroke-width="1"/><g><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" x="592.667" y="190" width="414.667" height="300" preserveAspectRatio="xMidYMid meet">
+  <!-- Concept B: The Precision Tuning Monogram (Hexagon + T/H Monogram) -->
+  <g fill="none" stroke="#000000" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Outer Precision Hexagon -->
+    <path d="M128 24 L216 76 V180 L128 232 L40 180 V76 Z" stroke-width="16" />
+    <!-- Monogram T & H -->
+    <!-- Top T-Bar -->
+    <path d="M72 80 H184" stroke-width="16" />
+    <!-- Central T-Stem / Left H-Bar -->
+    <path d="M96 80 V176" stroke-width="16" />
+    <path d="M160 80 V176" stroke-width="16" />
+    <!-- Crossbar with Diagnostic Pulse -->
+    <path d="M96 128 H116 L124 104 L132 152 L140 128 H160" stroke-width="12" />
+    <!-- Center Dot / Beacon -->
+    <circle cx="128" cy="180" r="8" fill="#000000" stroke="none" />
+  </g>
+</svg>
+</g><g><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 256" x="592.667" y="514" width="414.667" height="120" preserveAspectRatio="xMidYMid meet">
+  <!-- Concept B: Lockup (Hex Monogram + Wordmark) -->
+  <g fill="none" stroke="#000000" stroke-linecap="round" stroke-linejoin="round" transform="translate(16, 0)">
+    <!-- Hexagon -->
+    <path d="M112 32 L192 78 V178 L112 224 L32 178 V78 Z" stroke-width="14" />
+    <path d="M62 82 H162" stroke-width="14" />
+    <path d="M84 82 V174" stroke-width="14" />
+    <path d="M140 82 V174" stroke-width="14" />
+    <path d="M84 128 H102 L110 106 L116 150 L122 128 H140" stroke-width="10" />
+    <circle cx="112" cy="180" r="7" fill="#000000" stroke="none" />
+  </g>
+  <!-- Wordmark -->
+  <g fill="#000000">
+    <text x="236" y="128" font-family="-apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif" font-size="52" font-weight="900" letter-spacing="3">TECHTUNE</text>
+    <text x="238" y="172" font-family="-apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif" font-size="28" font-weight="700" letter-spacing="8" fill="#52525B">HEALER</text>
+    <rect x="238" y="190" width="340" height="4" rx="2" fill="#2563EB" />
+  </g>
+</svg>
+</g><g><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" x="592.667" y="660" width="64" height="64" preserveAspectRatio="xMidYMid meet">
+  <!-- Concept B: The Precision Tuning Monogram (Hexagon + T/H Monogram) -->
+  <g fill="none" stroke="#000000" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Outer Precision Hexagon -->
+    <path d="M128 24 L216 76 V180 L128 232 L40 180 V76 Z" stroke-width="16" />
+    <!-- Monogram T & H -->
+    <!-- Top T-Bar -->
+    <path d="M72 80 H184" stroke-width="16" />
+    <!-- Central T-Stem / Left H-Bar -->
+    <path d="M96 80 V176" stroke-width="16" />
+    <path d="M160 80 V176" stroke-width="16" />
+    <!-- Crossbar with Diagnostic Pulse -->
+    <path d="M96 128 H116 L124 104 L132 152 L140 128 H160" stroke-width="12" />
+    <!-- Center Dot / Beacon -->
+    <circle cx="128" cy="180" r="8" fill="#000000" stroke="none" />
+  </g>
+</svg>
+</g><text x="624.667" y="744" font-family="system-ui,-apple-system,'Segoe UI',Helvetica,Arial,sans-serif" font-size="12" fill="#8a8a8a" text-anchor="middle">64px</text><g><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" x="682.667" y="692" width="32" height="32" preserveAspectRatio="xMidYMid meet">
+  <!-- Concept B: The Precision Tuning Monogram (Hexagon + T/H Monogram) -->
+  <g fill="none" stroke="#000000" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Outer Precision Hexagon -->
+    <path d="M128 24 L216 76 V180 L128 232 L40 180 V76 Z" stroke-width="16" />
+    <!-- Monogram T & H -->
+    <!-- Top T-Bar -->
+    <path d="M72 80 H184" stroke-width="16" />
+    <!-- Central T-Stem / Left H-Bar -->
+    <path d="M96 80 V176" stroke-width="16" />
+    <path d="M160 80 V176" stroke-width="16" />
+    <!-- Crossbar with Diagnostic Pulse -->
+    <path d="M96 128 H116 L124 104 L132 152 L140 128 H160" stroke-width="12" />
+    <!-- Center Dot / Beacon -->
+    <circle cx="128" cy="180" r="8" fill="#000000" stroke="none" />
+  </g>
+</svg>
+</g><text x="698.667" y="744" font-family="system-ui,-apple-system,'Segoe UI',Helvetica,Arial,sans-serif" font-size="12" fill="#8a8a8a" text-anchor="middle">32px</text><g><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" x="740.667" y="708" width="16" height="16" preserveAspectRatio="xMidYMid meet">
+  <!-- Concept B: The Precision Tuning Monogram (Hexagon + T/H Monogram) -->
+  <g fill="none" stroke="#000000" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Outer Precision Hexagon -->
+    <path d="M128 24 L216 76 V180 L128 232 L40 180 V76 Z" stroke-width="16" />
+    <!-- Monogram T & H -->
+    <!-- Top T-Bar -->
+    <path d="M72 80 H184" stroke-width="16" />
+    <!-- Central T-Stem / Left H-Bar -->
+    <path d="M96 80 V176" stroke-width="16" />
+    <path d="M160 80 V176" stroke-width="16" />
+    <!-- Crossbar with Diagnostic Pulse -->
+    <path d="M96 128 H116 L124 104 L132 152 L140 128 H160" stroke-width="12" />
+    <!-- Center Dot / Beacon -->
+    <circle cx="128" cy="180" r="8" fill="#000000" stroke="none" />
+  </g>
+</svg>
+</g><text x="748.667" y="744" font-family="system-ui,-apple-system,'Segoe UI',Helvetica,Arial,sans-serif" font-size="12" fill="#8a8a8a" text-anchor="middle">16px</text><text x="592.6666666666667" y="780" font-family="system-ui,-apple-system,'Segoe UI',Helvetica,Arial,sans-serif" font-size="26" font-weight="700" fill="#161616">B · Concept B: Precision Monogram</text><text x="592.6666666666667" y="814" font-family="system-ui,-apple-system,'Segoe UI',Helvetica,Arial,sans-serif" font-size="19" fill="#555">Precision hex nut contour forming</text><text x="592.6666666666667" y="840" font-family="system-ui,-apple-system,'Segoe UI',Helvetica,Arial,sans-serif" font-size="19" fill="#555">intersecting T and H letterforms with a</text><text x="592.6666666666667" y="866" font-family="system-ui,-apple-system,'Segoe UI',Helvetica,Arial,sans-serif" font-size="19" fill="#555">vital pulse core.</text><rect x="1065.33" y="150" width="474.667" height="774" rx="18" fill="#fff" stroke="#e4e4e0" stroke-width="1"/><g><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" x="1095.33" y="190" width="414.667" height="300" preserveAspectRatio="xMidYMid meet">
+  <!-- Concept C: The Sentinel Beacon (Radar Wave & Rescue Spark) -->
+  <g fill="none" stroke="#000000" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Sweeping Radar Arcs / Protective Canopy -->
+    <path d="M52 144 C52 74 102 36 128 36 C154 36 204 74 204 144" stroke-width="16" />
+    <path d="M76 160 C76 104 110 68 128 68 C146 68 180 104 180 160" stroke-width="14" />
+    
+    <!-- Aerodynamic Chassis Base Line -->
+    <path d="M36 188 C80 200 176 200 220 188" stroke-width="16" />
+    
+    <!-- Central Diagnostic 4-Point Rescue Spark -->
+    <path d="M128 100 L136 124 L160 132 L136 140 L128 164 L120 140 L96 132 L120 124 Z" stroke-width="10" fill="#000000" />
+    
+    <!-- Anchor Nodes -->
+    <circle cx="56" cy="188" r="8" fill="#000000" stroke="none" />
+    <circle cx="200" cy="188" r="8" fill="#000000" stroke="none" />
+  </g>
+</svg>
+</g><g><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 256" x="1095.33" y="514" width="414.667" height="120" preserveAspectRatio="xMidYMid meet">
+  <!-- Concept C: Lockup (Sentinel Beacon + Wordmark) -->
+  <g fill="none" stroke="#000000" stroke-linecap="round" stroke-linejoin="round" transform="translate(16, 0)">
+    <path d="M46 140 C46 76 90 42 112 42 C134 42 178 76 178 140" stroke-width="14" />
+    <path d="M68 156 C68 106 98 72 112 72 C126 72 156 106 156 156" stroke-width="12" />
+    <path d="M30 184 C70 196 154 196 194 184" stroke-width="14" />
+    <path d="M112 104 L118 124 L138 130 L118 136 L112 156 L106 136 L86 130 L106 124 Z" stroke-width="8" fill="#000000" />
+    <circle cx="48" cy="184" r="7" fill="#000000" stroke="none" />
+    <circle cx="176" cy="184" r="7" fill="#000000" stroke="none" />
+  </g>
+  <!-- Wordmark -->
+  <g fill="#000000">
+    <text x="236" y="128" font-family="-apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif" font-size="52" font-weight="900" letter-spacing="3">TECHTUNE</text>
+    <text x="238" y="172" font-family="-apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif" font-size="28" font-weight="700" letter-spacing="8" fill="#52525B">HEALER</text>
+    <rect x="238" y="190" width="340" height="4" rx="2" fill="#2563EB" />
+  </g>
+</svg>
+</g><g><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" x="1095.33" y="660" width="64" height="64" preserveAspectRatio="xMidYMid meet">
+  <!-- Concept C: The Sentinel Beacon (Radar Wave & Rescue Spark) -->
+  <g fill="none" stroke="#000000" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Sweeping Radar Arcs / Protective Canopy -->
+    <path d="M52 144 C52 74 102 36 128 36 C154 36 204 74 204 144" stroke-width="16" />
+    <path d="M76 160 C76 104 110 68 128 68 C146 68 180 104 180 160" stroke-width="14" />
+    
+    <!-- Aerodynamic Chassis Base Line -->
+    <path d="M36 188 C80 200 176 200 220 188" stroke-width="16" />
+    
+    <!-- Central Diagnostic 4-Point Rescue Spark -->
+    <path d="M128 100 L136 124 L160 132 L136 140 L128 164 L120 140 L96 132 L120 124 Z" stroke-width="10" fill="#000000" />
+    
+    <!-- Anchor Nodes -->
+    <circle cx="56" cy="188" r="8" fill="#000000" stroke="none" />
+    <circle cx="200" cy="188" r="8" fill="#000000" stroke="none" />
+  </g>
+</svg>
+</g><text x="1127.33" y="744" font-family="system-ui,-apple-system,'Segoe UI',Helvetica,Arial,sans-serif" font-size="12" fill="#8a8a8a" text-anchor="middle">64px</text><g><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" x="1185.33" y="692" width="32" height="32" preserveAspectRatio="xMidYMid meet">
+  <!-- Concept C: The Sentinel Beacon (Radar Wave & Rescue Spark) -->
+  <g fill="none" stroke="#000000" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Sweeping Radar Arcs / Protective Canopy -->
+    <path d="M52 144 C52 74 102 36 128 36 C154 36 204 74 204 144" stroke-width="16" />
+    <path d="M76 160 C76 104 110 68 128 68 C146 68 180 104 180 160" stroke-width="14" />
+    
+    <!-- Aerodynamic Chassis Base Line -->
+    <path d="M36 188 C80 200 176 200 220 188" stroke-width="16" />
+    
+    <!-- Central Diagnostic 4-Point Rescue Spark -->
+    <path d="M128 100 L136 124 L160 132 L136 140 L128 164 L120 140 L96 132 L120 124 Z" stroke-width="10" fill="#000000" />
+    
+    <!-- Anchor Nodes -->
+    <circle cx="56" cy="188" r="8" fill="#000000" stroke="none" />
+    <circle cx="200" cy="188" r="8" fill="#000000" stroke="none" />
+  </g>
+</svg>
+</g><text x="1201.33" y="744" font-family="system-ui,-apple-system,'Segoe UI',Helvetica,Arial,sans-serif" font-size="12" fill="#8a8a8a" text-anchor="middle">32px</text><g><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" x="1243.33" y="708" width="16" height="16" preserveAspectRatio="xMidYMid meet">
+  <!-- Concept C: The Sentinel Beacon (Radar Wave & Rescue Spark) -->
+  <g fill="none" stroke="#000000" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Sweeping Radar Arcs / Protective Canopy -->
+    <path d="M52 144 C52 74 102 36 128 36 C154 36 204 74 204 144" stroke-width="16" />
+    <path d="M76 160 C76 104 110 68 128 68 C146 68 180 104 180 160" stroke-width="14" />
+    
+    <!-- Aerodynamic Chassis Base Line -->
+    <path d="M36 188 C80 200 176 200 220 188" stroke-width="16" />
+    
+    <!-- Central Diagnostic 4-Point Rescue Spark -->
+    <path d="M128 100 L136 124 L160 132 L136 140 L128 164 L120 140 L96 132 L120 124 Z" stroke-width="10" fill="#000000" />
+    
+    <!-- Anchor Nodes -->
+    <circle cx="56" cy="188" r="8" fill="#000000" stroke="none" />
+    <circle cx="200" cy="188" r="8" fill="#000000" stroke="none" />
+  </g>
+</svg>
+</g><text x="1251.33" y="744" font-family="system-ui,-apple-system,'Segoe UI',Helvetica,Arial,sans-serif" font-size="12" fill="#8a8a8a" text-anchor="middle">16px</text><text x="1095.3333333333335" y="780" font-family="system-ui,-apple-system,'Segoe UI',Helvetica,Arial,sans-serif" font-size="26" font-weight="700" fill="#161616">C · Concept C: The Sentinel Beacon</text><text x="1095.3333333333335" y="814" font-family="system-ui,-apple-system,'Segoe UI',Helvetica,Arial,sans-serif" font-size="19" fill="#555">Sweeping automotive radar canopy with an</text><text x="1095.3333333333335" y="840" font-family="system-ui,-apple-system,'Segoe UI',Helvetica,Arial,sans-serif" font-size="19" fill="#555">intelligent 4-point diagnostic rescue</text><text x="1095.3333333333335" y="866" font-family="system-ui,-apple-system,'Segoe UI',Helvetica,Arial,sans-serif" font-size="19" fill="#555">spark.</text></svg>

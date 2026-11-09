@@ -1,93 +1,233 @@
-# TechTune Healer
+# 🚗 TechTune Healer — Automotive Care, Roadside Assistance & AI Diagnostics Platform
 
-A mobile app that connects car owners with automotive service providers in Cambodia.
-Customers can find providers, book appointments, get AI-assisted diagnostics,
-request emergency roadside assistance, and track mechanics live. Providers manage
-bookings, services, earnings, and shop products.
+<div align="center">
 
-## Tech Stack
+![Expo](https://img.shields.io/badge/Expo-React_Native_Mobile-000020?logo=expo)
+![Next.js](https://img.shields.io/badge/Next.js-15_Admin_Portal-black?logo=next.js)
+![Express](https://img.shields.io/badge/Express-4.19-000000?logo=express)
+![Prisma](https://img.shields.io/badge/Prisma-6.0-2D3748?logo=prisma)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-336791?logo=postgresql)
+![Socket.io](https://img.shields.io/badge/Socket.io-Live_GPS_Tracking-010101?logo=socket.io)
+![Bakong KHQR](https://img.shields.io/badge/Bakong-KHQR_Integrated-D32F2F)
+![ABA PayWay](https://img.shields.io/badge/ABA-PayWay_Integrated-003366)
+![pnpm](https://img.shields.io/badge/maintained%20with-pnpm-f69220.svg?logo=pnpm)
+![License](https://img.shields.io/badge/License-MIT-blue.svg)
 
-**Mobile app** (root of this repo)
-- Expo / React Native 0.81, TypeScript
-- expo-router (file-based) as the app shell, react-navigation for the customer/provider tab + stack flows
-- Zustand for state, AsyncStorage for the auth token
-- socket.io-client for live mechanic tracking
-- react-native-maps (with OSRM for route drawing)
+**A full-stack on-demand automotive services marketplace and emergency breakdown platform for Cambodia. Connects car owners with verified repair workshops and mobile mechanics, featuring real-time GPS tracking, AI symptom diagnostics, and digital KHQR payments.**
 
-**Backend** (`backend/`)
-- Express 5 + TypeScript
-- Prisma 7 + MariaDB/MySQL (generated client lives in `backend/src/generated/`, run `prisma generate`)
-- Socket.IO location gateway (JWT-authenticated handshake, per-booking membership checks)
-- JWT auth (bcrypt 12 rounds, 30-day tokens), express-rate-limit on all routes with stricter auth/OTP limits
-- Multer image uploads (10MB cap, JPEG/PNG/WebP whitelist) served from `/uploads`
+[System Architecture](#-system-architecture) • [Database ERD](#-database-erd) • [Emergency Dispatch Sequence](#-emergency-dispatch--tracking-flow) • [Quick Start](#-quick-start)
 
-## Getting Started
+</div>
 
-### Backend
+---
 
+## ⚡ Overview
+
+**TechTune Healer** solves vehicle breakdown anxiety across Cambodian highways and cities. Drivers can instantly diagnose vehicle warning lights and odd noises via an AI symptom triaging engine, broadcast emergency roadside assistance requests to nearby verified mechanics with live GPS tracking, and complete seamless contactless payments via **Bakong KHQR** and **ABA PayWay**.
+
+---
+
+## 🏗️ System Architecture
+
+```mermaid
+flowchart TD
+    subgraph ClientLayer["📱 Client & Workshop Applications"]
+        CustomerMobile["Customer Mobile App<br/>(Expo React Native iOS / Android)"]
+        MechanicMobile["Mechanic Dispatch App<br/>(Expo Live Route & Job Queue)"]
+        AdminWeb["Workshop Operations Portal<br/>(Next.js 15 Dashboard)"]
+        
+        CustomerMobile & MechanicMobile & AdminWeb
+    end
+
+    subgraph GatewayLayer["⚡ API Gateway & Real-Time Dispatch"]
+        ExpressAPI["Express.js Modular API Gateway"]
+        AuthService["JWT Authentication & RBAC Guard"]
+        SocketHub["Socket.io WebSocket Server (Live GPS Streamer)"]
+        
+        ClientLayer <--> ExpressAPI
+        CustomerMobile <-->|"Live GPS Coordinates"| SocketHub
+        MechanicMobile <-->|"Real-Time Location Broadcast"| SocketHub
+    end
+
+    subgraph ServiceLayer["⚙️ Core Business & AI Engines"]
+        AIDiagnostics["AI Vehicle Symptom & OBD-II Diagnostics Engine"]
+        DispatchService["Roadside Emergency Dispatch & Geo-Matching"]
+        BookingService["Service Booking & Workshop Schedule Manager"]
+        PaymentService["Bakong KHQR & ABA PayWay Payment Gateway"]
+        
+        ExpressAPI --> AIDiagnostics
+        ExpressAPI --> DispatchService
+        ExpressAPI --> BookingService
+        ExpressAPI --> PaymentService
+    end
+
+    subgraph DataLayer["💾 Persistence & Cache Layer"]
+        Postgres[(PostgreSQL Relational DB)]
+        PrismaClient["Prisma 6 Client"]
+        RedisStore[(Redis Live GPS & Active Job Cache)]
+        
+        ExpressAPI <--> PrismaClient <--> Postgres
+        SocketHub <--> RedisStore
+    end
+```
+
+---
+
+## 📊 Database ERD
+
+```mermaid
+erDiagram
+    User ||--o{ Vehicle : owns
+    User ||--o{ Booking : requests
+    User ||--o{ Review : writes
+    User ||--o{ DiagnosticReport : generates
+    ServiceProvider ||--o{ Service : offers
+    ServiceProvider ||--o{ Booking : fulfills
+    ServiceProvider ||--o{ PayoutRequest : requests
+    Booking ||--o{ ChatMessage : contains
+    Booking ||--o{ Review : receives
+
+    User {
+        string id PK "cuid"
+        string email UK
+        string phone UK
+        string name
+        string role "CUSTOMER | MECHANIC | SHOP_OWNER | ADMIN"
+        datetime createdAt
+    }
+
+    ServiceProvider {
+        string id PK "cuid"
+        string ownerId FK
+        string businessName
+        string address
+        float latitude
+        float longitude
+        string verificationStatus "VERIFIED | PENDING | REJECTED"
+        float ratingAverage
+        boolean isMobileAvailable
+    }
+
+    Vehicle {
+        string id PK "cuid"
+        string userId FK
+        string make
+        string model
+        int year
+        string licensePlate UK
+        string vinNumber
+    }
+
+    Service {
+        string id PK "cuid"
+        string providerId FK
+        string name
+        text description
+        decimal price
+        int estimatedDurationMinutes
+        boolean isEmergency
+    }
+
+    Booking {
+        string id PK "cuid"
+        string customerId FK
+        string providerId FK
+        string serviceId FK
+        string status "PENDING | ACCEPTED | EN_ROUTE | IN_PROGRESS | COMPLETED | CANCELLED"
+        decimal totalAmount
+        string paymentMethod "BAKONG_KHQR | ABA_PAYWAY | CASH"
+        string paymentStatus "PENDING | PAID | REFUNDED"
+        datetime scheduledTime
+        float pickupLatitude
+        float pickupLongitude
+    }
+
+    DiagnosticReport {
+        string id PK "cuid"
+        string userId FK
+        string vehicleId FK
+        text userSymptoms
+        text aiAnalysis
+        string severity "LOW | MEDIUM | HIGH | CRITICAL"
+        json recommendedActions
+        datetime createdAt
+    }
+
+    PayoutRequest {
+        string id PK "cuid"
+        string providerId FK
+        decimal amount
+        string bankAccount
+        string status "PENDING | APPROVED | TRANSFERRED"
+        datetime requestedAt
+    }
+```
+
+---
+
+## 🔄 Emergency Dispatch & Tracking Flow
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Driver as 🚘 Stranded Driver
+    participant App as 📱 Mobile App (Expo)
+    participant API as ⚡ Express Gateway
+    participant AI as 🧠 AI Diagnostic Engine
+    participant Socket as 📡 Socket.io GPS Hub
+    actor Mechanic as 🔧 Mobile Mechanic
+
+    Driver->>App: Describes car problem ("Overheating engine on National Highway 6")
+    App->>API: POST /api/diagnostics/triage { symptoms, vehicleId }
+    API->>AI: Evaluate symptom risk & fault probabilities
+    AI-->>App: Diagnostic: "Coolant Leak Risk (Severity: CRITICAL) -> Request Tow/Mechanic"
+
+    Driver->>App: Click "Request Emergency Roadside Help" (Share GPS)
+    App->>API: POST /api/emergency/dispatch { lat: 13.3633, lng: 103.8564 }
+    API->>Socket: Broadcast Dispatch Alert to Mechanics within 15km
+    
+    Mechanic->>App: Accept Job Order (ETA: 18 mins)
+    Mechanic->>Socket: Stream live GPS position every 3 seconds
+    Socket-->>App: Render moving mechanic icon & route map
+    
+    Mechanic->>Driver: Arrives on scene & repairs vehicle
+    Mechanic->>App: Mark Job Completed -> Prompt Payment
+    Driver->>App: Scans dynamic Bakong KHQR code
+    App->>API: Confirm payment settlement
+    API-->>Mechanic: 💰 Funds credited to workshop payout ledger!
+```
+
+---
+
+## 🚀 Quick Start
+
+### 1. Backend API Setup
 ```bash
 cd backend
-npm install
-cp .env.example .env   # or create backend/.env from the keys below
-npx prisma generate    # regenerates backend/src/generated/
-npx prisma migrate dev # apply migrations
-npm run seed           # optional seed data
-npm run dev            # starts on PORT (default 4000)
+pnpm install
+
+# Push Database Schema
+pnpm prisma db push
+
+# Start Backend (Port 5000)
+pnpm run dev
 ```
 
-Required env keys (`backend/.env`):
-
-| Key | Purpose |
-| --- | --- |
-| `DATABASE_URL` | MariaDB/MySQL connection string |
-| `JWT_SECRET` | At least 16 chars. **Required** — the server refuses to start without it. |
-| `PORT` | API port (default 4000) |
-| `NODE_ENV` | `development` / `production` |
-| `CORS_ORIGINS` | Optional comma-separated allowlist for browser clients |
-| `SOCKET_ORIGINS` | Optional comma-separated allowlist for socket connections |
-
-### Mobile app
-
+### 2. Admin Web Portal Setup
 ```bash
-npm install
-cp .env.example .env   # set EXPO_PUBLIC_API_URL
-npm start              # or: npm run android / ios / web
+cd ../admin-web
+pnpm install
+pnpm run dev
 ```
 
-| Key | Purpose |
-| --- | --- |
-| `EXPO_PUBLIC_API_URL` | API base URL, also used as the socket URL (defaults to `https://api.techtunehealer.com`) |
-
-## Project Layout
-
-```
-app/                  expo-router routes (auth, customer, provider groups)
-src/
-  components/         shared UI components
-  constants/theme.ts  design tokens (colors, spacing, typography)
-  navigation/         customer/provider navigators + param list types
-  screens/            feature screens
-  services/api.ts     typed REST client (fetch + bearer token)
-  store/              Zustand stores (auth, location, bookings, ...)
-  types/              shared TypeScript types
-backend/
-  prisma/             schema + migrations + seed
-  src/
-    routes/           REST API routes (all authenticated)
-    gateways/         Socket.IO location gateway
-    middleware/       JWT auth + role guards
-    lib/              prisma client, security helpers
+### 3. Mobile App Setup (Expo)
+```bash
+cd ..
+pnpm install
+pnpm start
 ```
 
-## Security Notes
+---
 
-- Every REST route behind `/auth`, `/bookings`, `/providers`, etc. requires a
-  bearer token (except the OTP send/verify endpoints, which are rate-limited).
-- Socket connections must present a valid JWT in the handshake (`auth.token`);
-  `customer:watch`, `mechanic:location`, and `mechanic:arrived` additionally
-  verify the user is the booking's customer or provider.
-- OTP codes are stored in memory with a 5-minute expiry, a 1-minute resend
-  cooldown, a 5-attempt cap, and constant-time comparison. Swap in Redis + a
-  real SMS provider for production.
-- Checkout validates quantity and stock and reserves stock inside a single
-  Prisma transaction.
+## 📄 License
+MIT License © **[Ros Rendo](https://github.com/RosRendo)**

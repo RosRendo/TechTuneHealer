@@ -1,0 +1,24 @@
+feature,area,priority,original,clone,notes
+User authentication with JWT and roles (Customer Provider Admin),auth,must,yes,yes,Bcrypt 12 rounds and stateless JWT
+Vehicle management (Make Model Plate Color),vehicles,must,yes,yes,Customer vehicle registry
+1-Tap Emergency Roadside SOS Dispatch,emergency,must,yes,yes,High-priority GPS emergency beacon
+Real-time mechanic GPS coordinate streaming,telemetry,must,yes,yes,Socket.IO sub-400ms coordinate broadcast
+Live navigation polyline on native map,maps,must,yes,yes,OSRM driving geometry and react-native-maps
+Visual AI vehicle damage & warning light scanner,diagnostics,must,yes,yes,Multer image upload & symptom triage
+Interactive 3D Virtual Garage with OBD-II telemetry,garage,should,yes,yes,3D Model viewer and live sensor sheet
+Phnom Penh EV charging stations directory & pins,ev,should,yes,yes,Connector types and operating status
+Verified workshops directory with distance and ratings,providers,must,yes,yes,Haversine distance calculation in km
+Itemized appointment booking and transparent pricing,bookings,must,yes,yes,5-state booking lifecycle engine
+In-app real-time chat between driver and mechanic,chat,must,yes,yes,Socket.IO full-duplex messaging
+Spare parts e-commerce catalog with search and categories,shop,must,yes,yes,Product categories and stock counts
+Atomic e-commerce checkout with zero overselling,checkout,must,yes,yes,Prisma transaction serialization
+National Bank of Cambodia Bakong KHQR checkout,payments,must,yes,yes,Deep-linking and ABA Pay redirects
+Provider Online/Offline duty toggle switch,provider-duty,must,yes,yes,Instant status persistence
+Provider emergency dispatch triage with vehicle specs,provider-queue,must,yes,yes,1-tap Accept/Decline modal
+Provider turn-by-turn route tracking and milestone transitions,provider-lifecycle,must,yes,yes,HEADING -> ARRIVED -> IN_PROGRESS -> COMPLETED
+Provider financial analytics and KHQR payout sheet,provider-earnings,should,yes,yes,Gross Net and 10 percent platform fee
+Provider service menu and dynamic pricing manager,provider-services,should,yes,yes,Category chips and price editing
+Provider 7-day weekly schedule and on-call hours,provider-schedule,should,yes,yes,Opening closing times and night shift
+Customer review and star distribution with provider reply,reviews,should,yes,yes,5-star breakdown and verified vehicle badges
+Municipal dispatch queue command center,admin-portal,could,yes,yes,Next.js 16 Khan monitoring terminal
+One-click garage patent license verification console,admin-verification,could,yes,yes,Instant approval status update

@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Project Results Metrics</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      width: 900px;
+      height: 560px;
+      background: #ffffff;
+      font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .results-container {
+      width: 100%;
+      height: 100%;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: 1fr 1fr;
+      gap: 18px;
+    }
+
+    .metric-card {
+      border-radius: 18px;
+      padding: 24px 26px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      border: 1.5px solid rgba(0, 0, 0, 0.06);
+      box-shadow: 0 4px 18px rgba(0, 0, 0, 0.04);
+      transition: transform 0.2s ease;
+    }
+
+    /* Card 1: 95% Accuracy - Green Theme */
+    .card-accuracy {
+      background: linear-gradient(135deg, #f0fdf4 0%, #e7fbf0 100%);
+      border-color: #bbf7d0;
+    }
+    .icon-box-green {
+      width: 68px;
+      height: 68px;
+      border-radius: 50%;
+      background: #22c55e;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 32px;
+      box-shadow: 0 6px 16px rgba(34, 197, 94, 0.3);
+      flex-shrink: 0;
+    }
+    .stat-green {
+      color: #15803d;
+    }
+
+    /* Card 2: < 5 min - Orange Theme */
+    .card-dispatch {
+      background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%);
+      border-color: #fed7aa;
+    }
+    .icon-box-orange {
+      width: 68px;
+      height: 68px;
+      border-radius: 50%;
+      background: #f97316;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 32px;
+      box-shadow: 0 6px 16px rgba(249, 115, 22, 0.3);
+      flex-shrink: 0;
+    }
+    .stat-orange {
+      color: #c2410c;
+    }
+
+    /* Card 3: < 3s Latency - Blue Theme */
+    .card-tracking {
+      background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+      border-color: #bfdbfe;
+    }
+    .icon-box-blue {
+      width: 68px;
+      height: 68px;
+      border-radius: 50%;
+      background: #3b82f6;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 32px;
+      box-shadow: 0 6px 16px rgba(59, 130, 246, 0.3);
+      flex-shrink: 0;
+    }
+    .stat-blue {
+      color: #1d4ed8;
+    }
+
+    /* Card 4: 4.8 / 5 Rating - Purple/Gold Theme */
+    .card-rating {
+      background: linear-gradient(135deg, #fdf4ff 0%, #fae8ff 100%);
+      border-color: #f5d0fe;
+    }
+    .icon-box-purple {
+      width: 68px;
+      height: 68px;
+      border-radius: 50%;
+      background: #a855f7;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 32px;
+      box-shadow: 0 6px 16px rgba(168, 85, 247, 0.3);
+      flex-shrink: 0;
+    }
+    .stat-purple {
+      color: #7e22ce;
+    }
+
+    .metric-info {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .stat-value {
+      font-size: 40px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      line-height: 1.1;
+    }
+
+    .stat-title {
+      font-size: 17px;
+      font-weight: 700;
+      color: #1e293b;
+      margin-top: 2px;
+    }
+
+    .stat-desc {
+      font-size: 13.5px;
+      color: #64748b;
+      line-height: 1.35;
+      font-weight: 500;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="results-container">
+    <!-- Card 1: Accuracy -->
+    <div class="metric-card card-accuracy">
+      <div class="icon-box-green">
+        <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <circle cx="12" cy="12" r="6"></circle>
+          <circle cx="12" cy="12" r="2"></circle>
+        </svg>
+      </div>
+      <div class="metric-info">
+        <div class="stat-value stat-green">95%</div>
+        <div class="stat-title">AI Diagnostic Accuracy</div>
+        <div class="stat-desc">Reliable engine fault & warning light detection</div>
+      </div>
+    </div>
+
+    <!-- Card 2: Dispatch Time -->
+    <div class="metric-card card-dispatch">
+      <div class="icon-box-orange">
+        <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <polyline points="12 6 12 12 16 14"></polyline>
+        </svg>
+      </div>
+      <div class="metric-info">
+        <div class="stat-value stat-orange">&lt; 5 min</div>
+        <div class="stat-title">Average Dispatch Time</div>
+        <div class="stat-desc">Fast emergency roadside mechanic matching</div>
+      </div>
+    </div>
+
+    <!-- Card 3: Tracking Latency -->
+    <div class="metric-card card-tracking">
+      <div class="icon-box-blue">
+        <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+        </svg>
+      </div>
+      <div class="metric-info">
+        <div class="stat-value stat-blue">&lt; 3s Latency</div>
+        <div class="stat-title">Real-Time Tracking</div>
+        <div class="stat-desc">Live WebSocket GPS coordinate updates</div>
+      </div>
+    </div>
+
+    <!-- Card 4: User Satisfaction -->
+    <div class="metric-card card-rating">
+      <div class="icon-box-purple">
+        <svg width="34" height="34" viewBox="0 0 24 24" fill="currentColor">
+          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+        </svg>
+      </div>
+      <div class="metric-info">
+        <div class="stat-value stat-purple">4.8 / 5</div>
+        <div class="stat-title">User Satisfaction</div>
+        <div class="stat-desc">Validated with 50+ beta testers in Phnom Penh</div>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>
